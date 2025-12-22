@@ -10,3 +10,29 @@ springdoc:
   swagger-ui:
     tags-sorter: alpha
     operations-sorter: alpha
+
+spring:
+  datasource:
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: ${MYSQL_DRIVER}
+    hikari:
+      maximum-pool-size: 40 # 최대 커넥션 수
+      minimum-idle: 10  # 최소 유휴 커넥션 수
+      idle-timeout: 300000  # 5분
+      max-lifetime: 540000  # 9분
+      keepalive-time: 240000  # 4분 (idle 커넥션 주기적 ping)
+      connection-timeout: 10000 # 10초
+      leak-detection-threshold: 20000 # 20초
+  jackson:
+    time-zone: ${JSON_TIME_ZONE}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_HIBERNATE_DDL}
+    show-sql: ${JPA_SHOW_SQL}
+    properties:
+      hibernate:
+        format_sql: ${JPA_FORMAT_SQL}
+        jdbc:
+          time_zone: ${JPA_TIME_ZONE}
