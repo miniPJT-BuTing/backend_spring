@@ -1,0 +1,12 @@
+server:
+  port: ${SERVER_PORT}
+  tomcat:
+    max-swallow-size: -1
+
+swagger:
+  uri: ${SWAGGER_URI}
+
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: alpha
