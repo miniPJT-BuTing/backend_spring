@@ -4,6 +4,8 @@ import com.mini.buting.api.analysis.entity.FaceShape;
 import com.mini.buting.api.university.entity.Major;
 import com.mini.buting.api.university.entity.University;
 import com.mini.buting.global.common.BaseTimeEntity;
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
@@ -93,5 +95,13 @@ public class Member extends BaseTimeEntity {
         if (this.isDeleted == null) {
             this.isDeleted = false;
         }
+    }
+
+    public void softDelete() {
+        if (this.isDeleted) {
+            throw new BaseException(BaseResponseStatus.MEMBER_ALREADY_DELETED);
+        }
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
     }
 }
