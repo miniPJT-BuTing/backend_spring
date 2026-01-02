@@ -27,12 +27,16 @@ public enum BaseResponseStatus {
     /**
      * 5xx: Sever Error (서버 에러)
      */
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, false, 500, "서버에서 예기치 않은 오류가 발생했습니다.")
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, false, 500, "서버에서 예기치 않은 오류가 발생했습니다."),
 
     /**
      * Service Related Custom Errors
      */
-    ;
+
+    /**
+     * 2000: Member Service 관련 에러
+     */
+    MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
