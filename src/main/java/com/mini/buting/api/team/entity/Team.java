@@ -1,0 +1,141 @@
+package com.mini.buting.api.team.entity;
+
+import com.mini.buting.api.matchRequest.entity.MatchRequest;
+import com.mini.buting.api.member.entity.Member;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "Team")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Team {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(name = "preferred_age_min", nullable = false)
+    private Byte preferredAgeMin;
+
+    @Column(name = "preferred_age_max", nullable = false)
+    private Byte preferredAgeMax;
+
+    @Column(name = "preferred_entry_year_min", nullable = false)
+    private Byte preferredEntryYearMin;
+
+    @Column(name = "preferred_entry_year_max", nullable = false)
+    private Byte preferredEntryYearMax;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "team_size", nullable = false)
+    private TeamSize teamSize;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_mood", nullable = false)
+    private PreferredMood preferredMood;
+
+    @Column(nullable = false)
+    private String description;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "is_open", nullable = false)
+    private Boolean isOpen;
+
+    // 연관관계
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leader_id", nullable = false)
+    private Member leader;
+
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Member> teamMembers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "requestTeam")
+    private List<MatchRequest> sentMatchRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "targetTeam")
+    private List<MatchRequest> receivedMatchRequests = new ArrayList<>();
+
+    @Builder
+    public Team(String title, Byte preferredAgeMin, Byte preferredAgeMax,
+                    Byte preferredEntryYearMin, Byte preferredEntryYearMax,
+                    TeamSize teamSize, Gender gender, PreferredMood preferredMood,
+                    String description, Boolean isOpen, Member leader) {
+        this.title = title;
+        this.preferredAgeMin = preferredAgeMin;
+        this.preferredAgeMax = preferredAgeMax;
+        this.preferredEntryYearMin = preferredEntryYearMin;
+        this.preferredEntryYearMax = preferredEntryYearMax;
+        this.teamSize = teamSize;
+        this.gender = gender;
+        this.preferredMood = preferredMood;
+        this.description = description;
+        this.isOpen = isOpen;
+        this.leader = leader;
+    }
+
+    // 비즈니스 메서드
+    public void updateIsOpen(Boolean isOpen) {
+        this.isOpen = isOpen;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
+    public int getCurrentMemberCount() {
+        return teamMembers.size();
+    }
+
+    public boolean isFullTeam() {
+        return getCurrentMemberCount() >= teamSize.getSize();
+    }
+
+    public boolean canRequestMatch() {
+        return isFullTeam() && isOpen;
+    }
+
+    // Enum 정의
+    @Getter
+    public enum TeamSize {
+        TWO_VS_TWO("2:2", 2),
+        THREE_VS_THREE("3:3", 3),
+        FOUR_VS_FOUR("4:4", 4),
+        FIVE_VS_FIVE("5:5", 5),
+        SIX_VS_SIX("6:6", 6);
+
+        private final String displayName;
+        private final int size;
+
+        TeamSize(String displayName, int size) {
+            this.displayName = displayName;
+            this.size = size;
+        }
+    }
+
+    public enum Gender {
+        MALE, FEMALE
+    }
+
+    public enum PreferredMood {
+        FRIENDSHIP, RELATIONSHIP, BOTH
+    }
+}
