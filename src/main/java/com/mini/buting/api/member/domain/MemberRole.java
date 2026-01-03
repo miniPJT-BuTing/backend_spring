@@ -1,4 +1,4 @@
-package com.mini.buting.api.member.entity;
+package com.mini.buting.api.member.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

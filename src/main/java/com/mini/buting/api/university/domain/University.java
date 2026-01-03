@@ -1,4 +1,4 @@
-package com.mini.buting.api.university.entity;
+package com.mini.buting.api.university.domain;
 
 import com.mini.buting.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
