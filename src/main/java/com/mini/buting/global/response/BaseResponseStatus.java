@@ -50,7 +50,13 @@ public enum BaseResponseStatus {
      * 4000: match request 관련 에러
      */
     MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
-    MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다.");
+    MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다."),
+
+    /**
+     * 4100: MBTI 관련 에러
+     */
+    INVALID_MBTI_FORMAT(HttpStatus.BAD_REQUEST, false, 4100, "올바르지 않은 MBTI 형식입니다. 4글자 알파벳으로 입력해주세요."),
+    MBTI_REQUIRED(HttpStatus.BAD_REQUEST, false, 4101, "MBTI는 필수 입력 항목입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;

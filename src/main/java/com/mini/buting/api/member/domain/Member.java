@@ -21,11 +21,12 @@ import java.util.List;
 
 @Entity
 @Table(name = "member", indexes = {
-        @Index(name = "idx_member_uuid", columnList = "uuid"),
-        @Index(name = "idx_member_nickname", columnList = "nickname"),
-        @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
-        @Index(name = "idx_member_major", columnList = "major_id"),
-        @Index(name = "idx_member_face_shape", columnList = "face_shape_id")
+                @Index(name = "idx_member_uuid", columnList = "uuid"),
+                @Index(name = "idx_member_nickname", columnList = "nickname"),
+                @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
+                @Index(name = "idx_member_major", columnList = "major_id"),
+                @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
+                @Index(name = "idx_member_mbti", columnList = "mbti")
 }, uniqueConstraints = {
                 @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
                 @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
@@ -78,6 +79,11 @@ public class Member extends BaseTimeEntity {
     @Column(name = "bio", length = 255)
     @Comment("자기소개")
     private String bio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mbti", nullable = false, length = 4)
+    @Comment("MBTI 성격 유형 (ENFP, INTJ 등)")
+    private MbtiType mbti;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_domain_id", nullable = false, foreignKey = @ForeignKey(name = "FK_member_university_domain"))
@@ -157,5 +163,21 @@ public class Member extends BaseTimeEntity {
             throw new BaseException(BaseResponseStatus.NOT_TEAM_MEMBER);
         }
         this.teamMemberships.removeIf(tm -> tm.getTeam().equals(team));
+    }
+
+    // MBTI 관련 편의 메서드
+    public void updateMbti(MbtiType newMbti) {
+        if (newMbti == null) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        this.mbti = newMbti;
+    }
+
+    public String getMbtiCode() {
+        return this.mbti != null ? this.mbti.getCode() : null;
+    }
+
+    public String getMbtiDescription() {
+        return this.mbti != null ? this.mbti.getDescription() : null;
     }
 }
