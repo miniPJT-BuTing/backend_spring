@@ -44,7 +44,7 @@ public class MemberSocial extends BaseTimeEntity {
     @Comment("소셜 계정 이메일")
     private String email;
 
-    public static MemberSocial toMemberSocial(Member member, SocialProvider providerName, String providerId, String email) {
+    public static MemberSocial create(Member member, SocialProvider providerName, String providerId, String email) {
         return MemberSocial.builder()
                 .member(member)
                 .providerName(providerName)
