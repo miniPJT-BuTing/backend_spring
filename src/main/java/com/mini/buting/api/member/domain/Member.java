@@ -3,6 +3,7 @@ package com.mini.buting.api.member.domain;
 import com.mini.buting.api.analysis.domain.FaceShape;
 import com.mini.buting.api.university.domain.Major;
 import com.mini.buting.api.university.domain.University;
+import com.mini.buting.api.university.domain.UniversityDomain;
 import com.mini.buting.global.common.BaseTimeEntity;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
@@ -10,6 +11,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -17,12 +19,13 @@ import java.time.LocalDateTime;
 @Table(name = "member", indexes = {
         @Index(name = "idx_member_uuid", columnList = "uuid"),
         @Index(name = "idx_member_nickname", columnList = "nickname"),
-        @Index(name = "idx_member_university", columnList = "university_id"),
+        @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
         @Index(name = "idx_member_major", columnList = "major_id"),
         @Index(name = "idx_member_face_shape", columnList = "face_shape_id")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
-        @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"})
+        @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
+        @UniqueConstraint(name = "uk_university_email", columnNames = {"university_domain_id", "university_email"})
 })
 @Getter
 @Builder
@@ -73,9 +76,13 @@ public class Member extends BaseTimeEntity {
     private String bio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_id", foreignKey = @ForeignKey(name = "FK_member_university"))
-    @Comment("소속 대학 ID")
-    private University university;
+    @JoinColumn(name = "university_domain_id", nullable = false, foreignKey = @ForeignKey(name = "FK_member_university_domain"))
+    @Comment("소속 대학 도메인 ID")
+    private UniversityDomain universityDomain;
+
+    @Column(name = "university_email", nullable = false, length = 100)
+    @Comment("대학 이메일 계정 아이디 (@ 기호 앞부분)")
+    private String universityEmail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "major_id", foreignKey = @ForeignKey(name = "FK_member_major"))
@@ -103,5 +110,16 @@ public class Member extends BaseTimeEntity {
         }
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public University getUniversity() {
+        return this.universityDomain != null ? this.universityDomain.getUniversity() : null;
+    }
+
+    public String getFullUniversityEmail() {
+        if (this.universityDomain == null || !StringUtils.hasText(this.universityEmail)) {
+            return null;
+        }
+        return this.universityEmail + "@" + this.universityDomain.getDomain();
     }
 }
