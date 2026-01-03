@@ -36,7 +36,8 @@ public enum BaseResponseStatus {
     /**
      * 2000: Member Service 관련 에러
      */
-    MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다.");
+    MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다."),
+    SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
