@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.mini.buting.global.constant.SecurityConstants.GRANT_TYPE;
+import static com.mini.buting.global.security.constant.SecurityConstants.GRANT_TYPE;
 
 @Configuration
 public class SwaggerConfig {
