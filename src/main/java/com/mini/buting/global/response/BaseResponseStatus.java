@@ -44,7 +44,13 @@ public enum BaseResponseStatus {
      */
     TEAM_FULL(HttpStatus.BAD_REQUEST, false, 3001, "팀 정원이 가득 찼습니다."),
     ALREADY_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3002, "이미 해당 팀의 멤버입니다."),
-    NOT_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3003, "해당 팀의 멤버가 아닙니다.");
+    NOT_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3003, "해당 팀의 멤버가 아닙니다."),
+
+    /**
+     * 4000: match request 관련 에러
+     */
+    MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;

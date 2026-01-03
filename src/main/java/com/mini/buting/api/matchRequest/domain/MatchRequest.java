@@ -1,12 +1,14 @@
 package com.mini.buting.api.matchRequest.domain;
 
 import com.mini.buting.api.team.domain.Team;
+import com.mini.buting.global.common.BaseTimeEntity;
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -14,15 +16,11 @@ import java.time.LocalDateTime;
 @Table(name = "MatchRequest")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MatchRequest {
+public class MatchRequest extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,8 +58,9 @@ public class MatchRequest {
         this.status = MatchRequestStatus.CANCELLED;
     }
 
+    // 7일 후 요청 만료, 향후 수정 예정
     public boolean isExpired() {
-        return createdAt.plusDays(7).isBefore(LocalDateTime.now());
+        return getCreatedAt().plusDays(7).isBefore(LocalDateTime.now());
     }
 
     public void expireIfNeeded() {
@@ -84,10 +83,10 @@ public class MatchRequest {
 
     private void validatePendingStatus() {
         if (status != MatchRequestStatus.PENDING) {
-            throw new IllegalStateException("매칭 요청 상태가 PENDING이 아닙니다. 현재 상태: " + status);
+            throw new BaseException(BaseResponseStatus.MATCH_REQUEST_NOT_PENDING);
         }
         if (isExpired()) {
-            throw new IllegalStateException("만료된 매칭 요청은 처리할 수 없습니다.");
+            throw new BaseException(BaseResponseStatus.MATCH_REQUEST_EXPIRED);
         }
     }
 
