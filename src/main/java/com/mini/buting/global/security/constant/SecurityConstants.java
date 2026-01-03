@@ -1,4 +1,4 @@
-package com.mini.buting.global.constant;
+package com.mini.buting.global.security.constant;
 
 /**
  * Security 관련 상수 정의
