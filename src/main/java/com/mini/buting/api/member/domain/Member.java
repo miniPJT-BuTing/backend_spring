@@ -1,8 +1,8 @@
-package com.mini.buting.api.member.entity;
+package com.mini.buting.api.member.domain;
 
-import com.mini.buting.api.analysis.entity.FaceShape;
-import com.mini.buting.api.university.entity.Major;
-import com.mini.buting.api.university.entity.University;
+import com.mini.buting.api.analysis.domain.FaceShape;
+import com.mini.buting.api.university.domain.Major;
+import com.mini.buting.api.university.domain.University;
 import com.mini.buting.global.common.BaseTimeEntity;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
