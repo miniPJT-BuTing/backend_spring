@@ -37,7 +37,14 @@ public enum BaseResponseStatus {
      * 2000: Member Service 관련 에러
      */
     MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다."),
-    SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다.");
+    SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다."),
+
+    /**
+     * 3000: Team Service 관련 에러
+     */
+    TEAM_FULL(HttpStatus.BAD_REQUEST, false, 3001, "팀 정원이 가득 찼습니다."),
+    ALREADY_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3002, "이미 해당 팀의 멤버입니다."),
+    NOT_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3003, "해당 팀의 멤버가 아닙니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;

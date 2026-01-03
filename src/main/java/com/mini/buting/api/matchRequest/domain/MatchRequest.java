@@ -1,6 +1,6 @@
-package com.mini.buting.api.matchRequest.entity;
+package com.mini.buting.api.matchRequest.domain;
 
-import com.mini.buting.api.team.entity.Team;
+import com.mini.buting.api.team.domain.Team;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

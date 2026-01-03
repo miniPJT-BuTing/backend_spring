@@ -1,7 +1,9 @@
-package com.mini.buting.api.team.entity;
+package com.mini.buting.api.team.domain;
 
-import com.mini.buting.api.matchRequest.entity.MatchRequest;
-import com.mini.buting.api.member.entity.Member;
+import com.mini.buting.api.matchRequest.domain.MatchRequest;
+import com.mini.buting.api.member.domain.Member;
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -65,8 +67,9 @@ public class Team {
     @JoinColumn(name = "leader_id", nullable = false)
     private Member leader;
 
+    // TeamMember 중간 테이블을 통한 다대다 관계
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Member> teamMembers = new ArrayList<>();
+    private List<TeamMember> teamMembers = new ArrayList<>();
 
     @OneToMany(mappedBy = "requestTeam")
     private List<MatchRequest> sentMatchRequests = new ArrayList<>();
@@ -111,6 +114,30 @@ public class Team {
 
     public boolean canRequestMatch() {
         return isFullTeam() && isOpen;
+    }
+
+    // 팀원 관리 메서드
+    public void addMember(Member member) {
+        if (isFullTeam()) {
+            throw new BaseException(BaseResponseStatus.TEAM_FULL);
+        }
+        TeamMember teamMember = TeamMember.of(this, member);
+        this.teamMembers.add(teamMember);
+    }
+
+    public void removeMember(Member member) {
+        this.teamMembers.removeIf(tm -> tm.getMember().equals(member));
+    }
+
+    public List<Member> getMembers() {
+        return teamMembers.stream()
+                        .map(TeamMember::getMember)
+                        .toList();
+    }
+
+    public boolean isMember(Member member) {
+        return teamMembers.stream()
+                        .anyMatch(tm -> tm.getMember().equals(member));
     }
 
     // Enum 정의

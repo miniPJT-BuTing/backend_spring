@@ -1,6 +1,8 @@
 package com.mini.buting.api.member.domain;
 
 import com.mini.buting.api.analysis.domain.FaceShape;
+import com.mini.buting.api.team.domain.Team;
+import com.mini.buting.api.team.domain.TeamMember;
 import com.mini.buting.api.university.domain.Major;
 import com.mini.buting.api.university.domain.University;
 import com.mini.buting.api.university.domain.UniversityDomain;
@@ -14,6 +16,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "member", indexes = {
@@ -23,9 +27,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_member_major", columnList = "major_id"),
         @Index(name = "idx_member_face_shape", columnList = "face_shape_id")
 }, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
-        @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
-        @UniqueConstraint(name = "uk_university_email", columnNames = {"university_domain_id", "university_email"})
+                @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
+                @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
+                @UniqueConstraint(name = "uk_university_email", columnNames = {"university_domain_id", "university_email"})
 })
 @Getter
 @Builder
@@ -94,6 +98,11 @@ public class Member extends BaseTimeEntity {
     @Comment("AI 분석 얼굴형 ID")
     private FaceShape faceShape;
 
+    // TeamMember를 통한 다대다 관계
+    @Builder.Default
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeamMember> teamMemberships = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         if (this.role == null) {
@@ -121,5 +130,32 @@ public class Member extends BaseTimeEntity {
             return null;
         }
         return this.universityEmail + "@" + this.universityDomain.getDomain();
+    }
+
+    // 팀 관련 편의 메서드
+    public List<Team> getTeams() {
+        return teamMemberships.stream()
+                        .map(TeamMember::getTeam)
+                        .toList();
+    }
+
+    public boolean isMemberOf(Team team) {
+        return teamMemberships.stream()
+                        .anyMatch(tm -> tm.getTeam().equals(team));
+    }
+
+    public void joinTeam(Team team) {
+        if (isMemberOf(team)) {
+            throw new BaseException(BaseResponseStatus.ALREADY_TEAM_MEMBER);
+        }
+        TeamMember teamMember = TeamMember.of(team, this);
+        this.teamMemberships.add(teamMember);
+    }
+
+    public void leaveTeam(Team team) {
+        if (!isMemberOf(team)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_MEMBER);
+        }
+        this.teamMemberships.removeIf(tm -> tm.getTeam().equals(team));
     }
 }
