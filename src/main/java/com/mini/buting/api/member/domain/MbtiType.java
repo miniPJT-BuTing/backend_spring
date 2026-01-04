@@ -2,6 +2,8 @@ package com.mini.buting.api.member.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -44,7 +46,7 @@ public enum MbtiType {
     @JsonCreator
     public static MbtiType fromString(String code) {
         if (code == null || code.trim().isEmpty()) {
-            throw new IllegalArgumentException("MBTI 코드는 필수입니다.");
+            throw new BaseException(BaseResponseStatus.MBTI_REQUIRED);
         }
         
         String upperCode = code.trim().toUpperCase();
@@ -54,8 +56,8 @@ public enum MbtiType {
                 return type;
             }
         }
-        
-        throw new IllegalArgumentException("유효하지 않은 MBTI 코드입니다: " + code);
+
+        throw new BaseException(BaseResponseStatus.INVALID_MBTI_FORMAT);
     }
     
     /**
@@ -77,7 +79,7 @@ public enum MbtiType {
         try {
             fromString(code);
             return true;
-        } catch (IllegalArgumentException e) {
+        } catch (BaseException  e) {
             return false;
         }
     }
