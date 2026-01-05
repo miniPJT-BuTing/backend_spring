@@ -45,3 +45,18 @@ spring:
 
     mongodb:
       uri: ${MONGODB_URI}
+
+  rabbitmq:
+    host: ${RABBIT_MQ_HOST}
+    port: ${RABBIT_MQ_PORT}
+    username: ${RABBIT_MQ_ID}
+    password: ${RABBIT_MQ_PASSWORD}
+    virtual-host: /
+
+rabbitmq:
+  chat-queue:
+    name: "chat.queue"
+  chat-exchange:
+    name: "chat.exchange"
+  chat-routing:
+    key: "chat.room.*"
