@@ -18,15 +18,17 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "member", indexes = {
-                @Index(name = "idx_member_uuid", columnList = "uuid"),
-                @Index(name = "idx_member_nickname", columnList = "nickname"),
-                @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
-                @Index(name = "idx_member_major", columnList = "major_id"),
-                @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
-                @Index(name = "idx_member_mbti", columnList = "mbti")
+        @Index(name = "idx_member_uuid", columnList = "uuid"),
+        @Index(name = "idx_member_nickname", columnList = "nickname"),
+        @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
+        @Index(name = "idx_member_major", columnList = "major_id"),
+        @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
+        @Index(name = "idx_member_mbti", columnList = "mbti")
 }, uniqueConstraints = {
                 @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
                 @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
@@ -109,6 +111,11 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMember> teamMemberships = new ArrayList<>();
 
+    // 성격 키워드 관계 (정확히 3개)
+    @Builder.Default
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberPersonality> personalities = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         if (this.role == null) {
@@ -168,7 +175,7 @@ public class Member extends BaseTimeEntity {
     // MBTI 관련 편의 메서드
     public void updateMbti(MbtiType newMbti) {
         if (newMbti == null) {
-            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+            throw new BaseException(BaseResponseStatus.MBTI_REQUIRED);
         }
         this.mbti = newMbti;
     }
@@ -179,5 +186,50 @@ public class Member extends BaseTimeEntity {
 
     public String getMbtiDescription() {
         return this.mbti != null ? this.mbti.getDescription() : null;
+    }
+
+    // 성격 키워드 관련 편의 메서드
+    public void setPersonalities(List<PersonalityType> personalityTypes) {
+        if (personalityTypes == null) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        if (personalityTypes.size() != 3) {
+            throw new BaseException(BaseResponseStatus.INVALID_PERSONALITY_COUNT);
+        }
+        
+        // 중복 체크
+        Set<PersonalityType> uniqueTypes = Set.copyOf(personalityTypes);
+        if (uniqueTypes.size() != 3) {
+            throw new BaseException(BaseResponseStatus.DUPLICATE_PERSONALITY_TYPES);
+        }
+        
+        // 기존 성격 키워드 삭제 후 새로 추가
+        this.personalities.clear();
+        personalityTypes.forEach(type -> 
+            this.personalities.add(MemberPersonality.of(this, type))
+        );
+    }
+
+    public List<PersonalityType> getPersonalityTypes() {
+        return personalities.stream()
+                .map(MemberPersonality::getPersonalityType)
+                .toList();
+    }
+
+    public List<String> getPersonalityCodes() {
+        return personalities.stream()
+                .map(MemberPersonality::getPersonalityCode)
+                .toList();
+    }
+
+    public List<String> getPersonalityDescriptions() {
+        return personalities.stream()
+                .map(MemberPersonality::getPersonalityDescription)
+                .toList();
+    }
+
+    public boolean hasPersonalityType(PersonalityType personalityType) {
+        return personalities.stream()
+                .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
     }
 }

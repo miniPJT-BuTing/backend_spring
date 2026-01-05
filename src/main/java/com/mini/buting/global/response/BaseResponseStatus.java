@@ -56,7 +56,15 @@ public enum BaseResponseStatus {
      * 4100: MBTI 관련 에러
      */
     INVALID_MBTI_FORMAT(HttpStatus.BAD_REQUEST, false, 4100, "올바르지 않은 MBTI 형식입니다. 4글자 알파벳으로 입력해주세요."),
-    MBTI_REQUIRED(HttpStatus.BAD_REQUEST, false, 4101, "MBTI는 필수 입력 항목입니다.");
+    MBTI_REQUIRED(HttpStatus.BAD_REQUEST, false, 4101, "MBTI는 필수 입력 항목입니다."),
+
+    /**
+     * 4200: 성격 키워드 관련 에러
+     */
+    INVALID_PERSONALITY_COUNT(HttpStatus.BAD_REQUEST, false, 4200, "성격 키워드는 정확히 3개를 선택해야 합니다."),
+    DUPLICATE_PERSONALITY_TYPES(HttpStatus.BAD_REQUEST, false, 4201, "중복된 성격 키워드는 선택할 수 없습니다."),
+    INVALID_PERSONALITY_TYPE(HttpStatus.BAD_REQUEST, false, 4202, "유효하지 않은 성격 키워드입니다."),
+    PERSONALITY_REQUIRED(HttpStatus.BAD_REQUEST, false, 4203, "성격 키워드는 필수 입력 항목입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
