@@ -42,3 +42,6 @@ spring:
       port: ${REDIS_PORT}
       password: "${REDIS_PASSWORD}"
       fail-fast: ${REDIS_FAIL_FAST}
+
+    mongodb:
+      uri: ${MONGODB_URI}
