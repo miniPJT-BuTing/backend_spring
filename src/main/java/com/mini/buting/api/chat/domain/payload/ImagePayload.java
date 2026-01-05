@@ -1,4 +1,4 @@
-package com.mini.buting.api.chat.domain;
+package com.mini.buting.api.chat.domain.payload;
 
 import java.util.List;
 
