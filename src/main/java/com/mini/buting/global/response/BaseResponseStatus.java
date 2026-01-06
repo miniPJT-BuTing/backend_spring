@@ -37,7 +37,34 @@ public enum BaseResponseStatus {
      * 2000: Member Service 관련 에러
      */
     MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다."),
-    SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다.");
+    SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다."),
+
+    /**
+     * 3000: Team Service 관련 에러
+     */
+    TEAM_FULL(HttpStatus.BAD_REQUEST, false, 3001, "팀 정원이 가득 찼습니다."),
+    ALREADY_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3002, "이미 해당 팀의 멤버입니다."),
+    NOT_TEAM_MEMBER(HttpStatus.BAD_REQUEST, false, 3003, "해당 팀의 멤버가 아닙니다."),
+
+    /**
+     * 4000: match request 관련 에러
+     */
+    MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다."),
+
+    /**
+     * 4100: MBTI 관련 에러
+     */
+    INVALID_MBTI_FORMAT(HttpStatus.BAD_REQUEST, false, 4100, "올바르지 않은 MBTI 형식입니다. 4글자 알파벳으로 입력해주세요."),
+    MBTI_REQUIRED(HttpStatus.BAD_REQUEST, false, 4101, "MBTI는 필수 입력 항목입니다."),
+
+    /**
+     * 4200: 성격 키워드 관련 에러
+     */
+    INVALID_PERSONALITY_COUNT(HttpStatus.BAD_REQUEST, false, 4200, "성격 키워드는 정확히 3개를 선택해야 합니다."),
+    DUPLICATE_PERSONALITY_TYPES(HttpStatus.BAD_REQUEST, false, 4201, "중복된 성격 키워드는 선택할 수 없습니다."),
+    INVALID_PERSONALITY_TYPE(HttpStatus.BAD_REQUEST, false, 4202, "유효하지 않은 성격 키워드입니다."),
+    PERSONALITY_REQUIRED(HttpStatus.BAD_REQUEST, false, 4203, "성격 키워드는 필수 입력 항목입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
