@@ -88,7 +88,7 @@ public class Team extends BaseTimeEntity {
     private Member leader;
 
     // TeamMember 중간 테이블을 통한 다대다 관계
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "team")
     private List<TeamMember> teamMembers = new ArrayList<>();
 
     @OneToMany(mappedBy = "requestTeam")
