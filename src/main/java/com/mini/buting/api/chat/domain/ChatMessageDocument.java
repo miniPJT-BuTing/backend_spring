@@ -1,5 +1,6 @@
 package com.mini.buting.api.chat.domain;
 
+import com.mini.buting.api.chat.domain.payload.Payload;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,5 +1,6 @@
 package com.mini.buting.api.chat.domain;
 
+import com.mini.buting.api.chat.domain.payload.Payload;
 import lombok.*;
 import java.time.LocalDateTime;
 
