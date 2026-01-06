@@ -20,10 +20,12 @@ import java.util.List;
                 @Index(name = "idx_team_open_created", columnList = "is_open, created_at DESC"),
 
                 // 팀 검색 필터링 조합 인덱스 (성별 + 크기 + 분위기)
-                @Index(name = "idx_team_search_filter", columnList = "is_open, gender, team_size, preferred_mood"),
+                @Index(name = "idx_team_search_filter",
+                                columnList = "is_open, gender, team_size, preferred_mood"),
 
                 // 연령대 범위 검색용 인덱스
-                @Index(name = "idx_team_age_range", columnList = "is_open, preferred_age_min, preferred_age_max"),
+                @Index(name = "idx_team_age_range",
+                                columnList = "is_open, preferred_age_min, preferred_age_max"),
 
                 // 팀장별 팀 조회 (내 팀 관리용)
                 @Index(name = "idx_team_leader", columnList = "leader_id"),
@@ -38,8 +40,7 @@ import java.util.List;
                 @Index(name = "idx_team_size_open", columnList = "team_size, is_open"),
 
                 // 분위기별 조회
-                @Index(name = "idx_team_mood_open", columnList = "preferred_mood, is_open")
-})
+                @Index(name = "idx_team_mood_open", columnList = "preferred_mood, is_open")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Team extends BaseTimeEntity {
@@ -87,7 +88,7 @@ public class Team extends BaseTimeEntity {
     private Member leader;
 
     // TeamMember 중간 테이블을 통한 다대다 관계
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "team")
     private List<TeamMember> teamMembers = new ArrayList<>();
 
     @OneToMany(mappedBy = "requestTeam")
