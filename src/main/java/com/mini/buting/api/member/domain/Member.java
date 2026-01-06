@@ -3,7 +3,7 @@ package com.mini.buting.api.member.domain;
 import com.mini.buting.api.analysis.domain.FaceShape;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.api.team.domain.TeamMember;
-import com.mini.buting.api.university.domain.Major;
+import com.mini.buting.api.university.domain.College; // Major 대신 College(단과대) 사용
 import com.mini.buting.api.university.domain.University;
 import com.mini.buting.api.university.domain.UniversityDomain;
 import com.mini.buting.global.common.BaseTimeEntity;
@@ -19,16 +19,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "member", indexes = {
-        @Index(name = "idx_member_uuid", columnList = "uuid"),
-        @Index(name = "idx_member_nickname", columnList = "nickname"),
-        @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
-        @Index(name = "idx_member_major", columnList = "major_id"),
-        @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
-        @Index(name = "idx_member_mbti", columnList = "mbti")
+                @Index(name = "idx_member_uuid", columnList = "uuid"),
+                @Index(name = "idx_member_nickname", columnList = "nickname"),
+                @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
+                @Index(name = "idx_member_college", columnList = "college_id"),
+                @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
+                @Index(name = "idx_member_mbti", columnList = "mbti"),
+                @Index(name = "idx_member_entry_year", columnList = "entry_year")
 }, uniqueConstraints = {
                 @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
                 @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
@@ -87,6 +87,10 @@ public class Member extends BaseTimeEntity {
     @Comment("MBTI 성격 유형 (ENFP, INTJ 등)")
     private MbtiType mbti;
 
+    @Column(name = "entry_year", nullable = false)
+    @Comment("학번 (예: 22)")
+    private Integer entryYear;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_domain_id", nullable = false, foreignKey = @ForeignKey(name = "FK_member_university_domain"))
     @Comment("소속 대학 도메인 ID")
@@ -97,9 +101,9 @@ public class Member extends BaseTimeEntity {
     private String universityEmail;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "major_id", foreignKey = @ForeignKey(name = "FK_member_major"))
-    @Comment("소속 학과 ID")
-    private Major major;
+    @JoinColumn(name = "college_id", foreignKey = @ForeignKey(name = "FK_member_college"))
+    @Comment("소속 단과대 ID")
+    private College college;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "face_shape_id", foreignKey = @ForeignKey(name = "FK_member_face_shape"))
@@ -144,7 +148,7 @@ public class Member extends BaseTimeEntity {
         }
         return this.universityEmail + "@" + this.universityDomain.getDomain();
     }
-
+    
     // 팀 관련 편의 메서드
     public List<Team> getTeams() {
         return teamMemberships.stream()
@@ -196,40 +200,45 @@ public class Member extends BaseTimeEntity {
         if (personalityTypes.size() != 3) {
             throw new BaseException(BaseResponseStatus.INVALID_PERSONALITY_COUNT);
         }
-        
+
         // 중복 체크
         Set<PersonalityType> uniqueTypes = Set.copyOf(personalityTypes);
         if (uniqueTypes.size() != 3) {
             throw new BaseException(BaseResponseStatus.DUPLICATE_PERSONALITY_TYPES);
         }
-        
+
         // 기존 성격 키워드 삭제 후 새로 추가
         this.personalities.clear();
-        personalityTypes.forEach(type -> 
-            this.personalities.add(MemberPersonality.of(this, type))
+        personalityTypes.forEach(type ->
+                        this.personalities.add(MemberPersonality.of(this, type))
         );
     }
 
     public List<PersonalityType> getPersonalityTypes() {
         return personalities.stream()
-                .map(MemberPersonality::getPersonalityType)
-                .toList();
+                        .map(MemberPersonality::getPersonalityType)
+                        .toList();
     }
 
     public List<String> getPersonalityCodes() {
         return personalities.stream()
-                .map(MemberPersonality::getPersonalityCode)
-                .toList();
+                        .map(MemberPersonality::getPersonalityCode)
+                        .toList();
     }
 
     public List<String> getPersonalityDescriptions() {
         return personalities.stream()
-                .map(MemberPersonality::getPersonalityDescription)
-                .toList();
+                        .map(MemberPersonality::getPersonalityDescription)
+                        .toList();
     }
 
     public boolean hasPersonalityType(PersonalityType personalityType) {
         return personalities.stream()
-                .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
+                        .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
+    }
+
+    // 📌 얼굴형 분석 결과 편의 메서드
+    public String getFaceShapeName() {
+        return this.faceShape != null ? this.faceShape.getName() : null;
     }
 }

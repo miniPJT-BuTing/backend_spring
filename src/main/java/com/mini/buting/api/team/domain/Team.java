@@ -2,6 +2,7 @@ package com.mini.buting.api.team.domain;
 
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.member.domain.Member;
+import com.mini.buting.global.common.BaseTimeEntity;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.persistence.*;
@@ -9,9 +10,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +18,7 @@ import java.util.List;
 @Table(name = "Team")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Team {
+public class Team extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,10 +53,6 @@ public class Team {
 
     @Column(nullable = false)
     private String description;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @Column(name = "is_open", nullable = false)
     private Boolean isOpen;
