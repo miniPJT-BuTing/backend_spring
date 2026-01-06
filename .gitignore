@@ -80,3 +80,8 @@ out/
 
 ### Environments
 .env 
+
+### mac
+.idea/
+*/.DS_store
+.DS_store
