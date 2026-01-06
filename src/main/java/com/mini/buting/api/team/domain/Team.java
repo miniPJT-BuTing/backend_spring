@@ -143,11 +143,11 @@ public class Team {
     // Enum 정의
     @Getter
     public enum TeamSize {
-        TWO_VS_TWO("2:2", 2),
-        THREE_VS_THREE("3:3", 3),
-        FOUR_VS_FOUR("4:4", 4),
-        FIVE_VS_FIVE("5:5", 5),
-        SIX_VS_SIX("6:6", 6);
+        TWO_ON_TWO("2:2", 2),
+        THREE_ON_THREE("3:3", 3),
+        FOUR_ON_FOUR("4:4", 4),
+        FIVE_ON_FIVE("5:5", 5),
+        SIX_ON_SIX("6:6", 6);
 
         private final String displayName;
         private final int size;
@@ -163,6 +163,24 @@ public class Team {
     }
 
     public enum PreferredMood {
-        FRIENDSHIP, RELATIONSHIP, BOTH
+        ROMANTIC_TENSION("연애 텐션"),
+        FRIENDSHIP_TENSION("친구 텐션"),
+        FLIRTY_TENSION("썸 텐션"),
+        CALM_TENSION("차분 텐션"),
+        HIGH_TENSION("하이 텐션"),
+        DRINKING_TENSION("술 텐션"),
+        EMOTIONAL_TENSION("감성 텐션"),
+        ANY_MOOD("어떤 분위기든 상관없음");
+
+        private final String description;
+
+        PreferredMood(String description) {
+            this.description = description;
+        }
+
+        // 화면에 표시할 한글명 반환
+        public String getDisplayName() {
+            return this.description;
+        }
     }
 }

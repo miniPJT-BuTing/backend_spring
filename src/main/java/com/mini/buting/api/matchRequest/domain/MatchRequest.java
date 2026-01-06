@@ -53,11 +53,6 @@ public class MatchRequest extends BaseTimeEntity {
         this.status = MatchRequestStatus.REJECTED;
     }
 
-    public void cancel() {
-        validatePendingStatus();
-        this.status = MatchRequestStatus.CANCELLED;
-    }
-
     // 7일 후 요청 만료, 향후 수정 예정
     public boolean isExpired() {
         return getCreatedAt().plusDays(7).isBefore(LocalDateTime.now());
@@ -65,7 +60,7 @@ public class MatchRequest extends BaseTimeEntity {
 
     public void expireIfNeeded() {
         if (isExpired() && status == MatchRequestStatus.PENDING) {
-            this.status = MatchRequestStatus.CANCELLED;
+            this.status = MatchRequestStatus.REJECTED;
         }
     }
 
@@ -94,7 +89,6 @@ public class MatchRequest extends BaseTimeEntity {
     public enum MatchRequestStatus {
         PENDING,    // 대기중
         ACCEPTED,   // 수락됨
-        REJECTED,   // 거절됨
-        CANCELLED   // 취소됨
+        REJECTED   // 거절됨
     }
 }
