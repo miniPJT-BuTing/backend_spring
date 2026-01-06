@@ -21,19 +21,20 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "member", indexes = {
-                @Index(name = "idx_member_uuid", columnList = "uuid"),
+@Table(name = "member", indexes = {@Index(name = "idx_member_uuid", columnList = "uuid"),
                 @Index(name = "idx_member_nickname", columnList = "nickname"),
                 @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
                 @Index(name = "idx_member_college", columnList = "college_id"),
                 @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
                 @Index(name = "idx_member_mbti", columnList = "mbti"),
-                @Index(name = "idx_member_entry_year", columnList = "entry_year")
-}, uniqueConstraints = {
-                @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
-                @UniqueConstraint(name = "uk_member_nickname", columnNames = {"nickname"}),
-                @UniqueConstraint(name = "uk_university_email", columnNames = {"university_domain_id", "university_email"})
-})
+                @Index(name = "idx_member_entry_year", columnList = "entry_year")},
+                uniqueConstraints = {
+                                @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
+                                @UniqueConstraint(name = "uk_member_nickname",
+                                                columnNames = {"nickname"}),
+                                @UniqueConstraint(name = "uk_university_email",
+                                                columnNames = {"university_domain_id",
+                                                                "university_email"})})
 @Getter
 @Builder
 @DynamicUpdate
@@ -92,7 +93,8 @@ public class Member extends BaseTimeEntity {
     private Integer entryYear;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_domain_id", nullable = false, foreignKey = @ForeignKey(name = "FK_member_university_domain"))
+    @JoinColumn(name = "university_domain_id", nullable = false,
+                    foreignKey = @ForeignKey(name = "FK_member_university_domain"))
     @Comment("소속 대학 도메인 ID")
     private UniversityDomain universityDomain;
 
@@ -148,17 +150,14 @@ public class Member extends BaseTimeEntity {
         }
         return this.universityEmail + "@" + this.universityDomain.getDomain();
     }
-    
+
     // 팀 관련 편의 메서드
     public List<Team> getTeams() {
-        return teamMemberships.stream()
-                        .map(TeamMember::getTeam)
-                        .toList();
+        return teamMemberships.stream().map(TeamMember::getTeam).toList();
     }
 
     public boolean isMemberOf(Team team) {
-        return teamMemberships.stream()
-                        .anyMatch(tm -> tm.getTeam().equals(team));
+        return teamMemberships.stream().anyMatch(tm -> tm.getTeam().equals(team));
     }
 
     public void joinTeam(Team team) {
@@ -209,27 +208,19 @@ public class Member extends BaseTimeEntity {
 
         // 기존 성격 키워드 삭제 후 새로 추가
         this.personalities.clear();
-        personalityTypes.forEach(type ->
-                        this.personalities.add(MemberPersonality.of(this, type))
-        );
+        personalityTypes.forEach(type -> this.personalities.add(MemberPersonality.of(this, type)));
     }
 
     public List<PersonalityType> getPersonalityTypes() {
-        return personalities.stream()
-                        .map(MemberPersonality::getPersonalityType)
-                        .toList();
+        return personalities.stream().map(MemberPersonality::getPersonalityType).toList();
     }
 
     public List<String> getPersonalityCodes() {
-        return personalities.stream()
-                        .map(MemberPersonality::getPersonalityCode)
-                        .toList();
+        return personalities.stream().map(MemberPersonality::getPersonalityCode).toList();
     }
 
     public List<String> getPersonalityDescriptions() {
-        return personalities.stream()
-                        .map(MemberPersonality::getPersonalityDescription)
-                        .toList();
+        return personalities.stream().map(MemberPersonality::getPersonalityDescription).toList();
     }
 
     public boolean hasPersonalityType(PersonalityType personalityType) {
@@ -237,7 +228,7 @@ public class Member extends BaseTimeEntity {
                         .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
     }
 
-    // 📌 얼굴형 분석 결과 편의 메서드
+    // 얼굴형 분석 결과 편의 메서드
     public String getFaceShapeName() {
         return this.faceShape != null ? this.faceShape.getName() : null;
     }

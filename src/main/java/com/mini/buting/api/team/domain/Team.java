@@ -15,7 +15,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "Team")
+@Table(name = "Team", indexes = {
+                // 매칭 가능한 팀 조회 (가장 빈번한 조회 - is_open과 최신순)
+                @Index(name = "idx_team_open_created", columnList = "is_open, created_at DESC"),
+
+                // 팀 검색 필터링 조합 인덱스 (성별 + 크기 + 분위기)
+                @Index(name = "idx_team_search_filter", columnList = "is_open, gender, team_size, preferred_mood"),
+
+                // 연령대 범위 검색용 인덱스
+                @Index(name = "idx_team_age_range", columnList = "is_open, preferred_age_min, preferred_age_max"),
+
+                // 팀장별 팀 조회 (내 팀 관리용)
+                @Index(name = "idx_team_leader", columnList = "leader_id"),
+
+                // 최신순 정렬용 (전체 팀 목록)
+                @Index(name = "idx_team_created", columnList = "created_at DESC"),
+
+                // 성별별 조회
+                @Index(name = "idx_team_gender_open", columnList = "gender, is_open"),
+
+                // 팀 크기별 조회
+                @Index(name = "idx_team_size_open", columnList = "team_size, is_open"),
+
+                // 분위기별 조회
+                @Index(name = "idx_team_mood_open", columnList = "preferred_mood, is_open")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Team extends BaseTimeEntity {
@@ -74,9 +98,9 @@ public class Team extends BaseTimeEntity {
 
     @Builder
     public Team(String title, Byte preferredAgeMin, Byte preferredAgeMax,
-                    Byte preferredEntryYearMin, Byte preferredEntryYearMax,
-                    TeamSize teamSize, Gender gender, PreferredMood preferredMood,
-                    String description, Boolean isOpen, Member leader) {
+                    Byte preferredEntryYearMin, Byte preferredEntryYearMax, TeamSize teamSize,
+                    Gender gender, PreferredMood preferredMood, String description, Boolean isOpen,
+                    Member leader) {
         this.title = title;
         this.preferredAgeMin = preferredAgeMin;
         this.preferredAgeMax = preferredAgeMax;
@@ -125,24 +149,18 @@ public class Team extends BaseTimeEntity {
     }
 
     public List<Member> getMembers() {
-        return teamMembers.stream()
-                        .map(TeamMember::getMember)
-                        .toList();
+        return teamMembers.stream().map(TeamMember::getMember).toList();
     }
 
     public boolean isMember(Member member) {
-        return teamMembers.stream()
-                        .anyMatch(tm -> tm.getMember().equals(member));
+        return teamMembers.stream().anyMatch(tm -> tm.getMember().equals(member));
     }
 
     // Enum 정의
     @Getter
     public enum TeamSize {
-        TWO_ON_TWO("2:2", 2),
-        THREE_ON_THREE("3:3", 3),
-        FOUR_ON_FOUR("4:4", 4),
-        FIVE_ON_FIVE("5:5", 5),
-        SIX_ON_SIX("6:6", 6);
+        TWO_ON_TWO("2:2", 2), THREE_ON_THREE("3:3", 3), FOUR_ON_FOUR("4:4", 4), FIVE_ON_FIVE("5:5",
+                        5), SIX_ON_SIX("6:6", 6);
 
         private final String displayName;
         private final int size;
@@ -153,19 +171,16 @@ public class Team extends BaseTimeEntity {
         }
     }
 
+
     public enum Gender {
         MALE, FEMALE
     }
 
+
     public enum PreferredMood {
-        ROMANTIC_TENSION("연애 텐션"),
-        FRIENDSHIP_TENSION("친구 텐션"),
-        FLIRTY_TENSION("썸 텐션"),
-        CALM_TENSION("차분 텐션"),
-        HIGH_TENSION("하이 텐션"),
-        DRINKING_TENSION("술 텐션"),
-        EMOTIONAL_TENSION("감성 텐션"),
-        ANY_MOOD("어떤 분위기든 상관없음");
+        ROMANTIC_TENSION("연애 텐션"), FRIENDSHIP_TENSION("친구 텐션"), FLIRTY_TENSION(
+                        "썸 텐션"), CALM_TENSION("차분 텐션"), HIGH_TENSION("하이 텐션"), DRINKING_TENSION(
+                        "술 텐션"), EMOTIONAL_TENSION("감성 텐션"), ANY_MOOD("어떤 분위기든 상관없음");
 
         private final String description;
 

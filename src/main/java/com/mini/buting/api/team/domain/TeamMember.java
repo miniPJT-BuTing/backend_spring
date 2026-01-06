@@ -25,9 +25,6 @@ public class TeamMember {
 
     // 팀원을 팀에 추가하는 정적 팩토리 메서드
     public static TeamMember of(Team team, Member member) {
-        return TeamMember.builder()
-                .team(team)
-                .member(member)
-                .build();
+        return TeamMember.builder().team(team).member(member).build();
     }
 }

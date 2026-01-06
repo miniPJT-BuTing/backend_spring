@@ -6,6 +6,7 @@ import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.util.StringUtils;
 
 /**
  * 성격 키워드 20가지 유형
@@ -49,7 +50,7 @@ public enum PersonalityType {
      */
     @JsonCreator
     public static PersonalityType fromString(String code) {
-        if (code == null || code.trim().isEmpty()) {
+        if (!StringUtils.hasText(code)) {
             throw new BaseException(BaseResponseStatus.PERSONALITY_REQUIRED);
         }
 
