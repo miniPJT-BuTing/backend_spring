@@ -38,6 +38,8 @@ public enum BaseResponseStatus {
      */
     MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, false, 2001, "이미 탈퇴 처리된 회원입니다."),
     SOCIAL_TYPE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, false, 2002, "지원하지 않는 소셜 로그인 유형입니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, false, 2003, "존재하지 않는 회원입니다."),
+    MEMBER_DELETED_USER(HttpStatus.FORBIDDEN, false, 2004, "탈퇴한 사용자의 프로필은 조회할 수 없습니다."),
 
     /**
      * 3000: Team Service 관련 에러
@@ -64,7 +66,14 @@ public enum BaseResponseStatus {
     INVALID_PERSONALITY_COUNT(HttpStatus.BAD_REQUEST, false, 4200, "성격 키워드는 정확히 3개를 선택해야 합니다."),
     DUPLICATE_PERSONALITY_TYPES(HttpStatus.BAD_REQUEST, false, 4201, "중복된 성격 키워드는 선택할 수 없습니다."),
     INVALID_PERSONALITY_TYPE(HttpStatus.BAD_REQUEST, false, 4202, "유효하지 않은 성격 키워드입니다."),
-    PERSONALITY_REQUIRED(HttpStatus.BAD_REQUEST, false, 4203, "성격 키워드는 필수 입력 항목입니다.");
+    PERSONALITY_REQUIRED(HttpStatus.BAD_REQUEST, false, 4203, "성격 키워드는 필수 입력 항목입니다."),
+
+    /**
+     * 4300: 성격 키워드 관련 에러
+     */
+    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4301, "존재하지 않는 대학입니다."),
+    COLLEGE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4302, "존재하지 않는 단과대입니다."),
+    INVALID_UNIVERSITY_EMAIL(HttpStatus.BAD_REQUEST, false, 4303, "올바르지 않은 대학 이메일입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
