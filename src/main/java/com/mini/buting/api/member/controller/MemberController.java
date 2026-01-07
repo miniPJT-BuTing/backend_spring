@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1") // v1 버전 prefix 추가, /api 제거
+@RequestMapping("/v1/members")
 @RequiredArgsConstructor
 @Slf4j
 public class MemberController {
@@ -19,7 +19,7 @@ public class MemberController {
      * 내 프로필 조회
      * TODO: Spring Security 적용 시 Authentication에서 사용자 정보 추출
      */
-    @GetMapping("/me/profile")  // /v1/me/profile
+    @GetMapping("/profile/me")
     public BaseResponse<MemberProfileResponse> getMyProfile(
                     @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId) {
 
@@ -34,7 +34,7 @@ public class MemberController {
     /**
      * 특정 회원 프로필 조회
      */
-    @GetMapping("/users/{userId}/profile") // /v1/users/{userId}/profile
+    @GetMapping("/profile/{userId}")
     public BaseResponse<MemberProfileResponse> getMemberProfile(@PathVariable Long userId) {
 
         log.debug("회원 프로필 조회 요청: userId={}", userId);
