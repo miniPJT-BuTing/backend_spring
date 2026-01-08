@@ -10,8 +10,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "friend",
                 indexes = {
@@ -31,9 +29,6 @@ public class Friend extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "became_friends_at", nullable = false)
-    private LocalDateTime becameFriendsAt;
-
     // 연관관계 - member1_id는 항상 더 작은 ID 값을 가지도록 구성
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member1_id", nullable = false)
@@ -44,7 +39,7 @@ public class Friend extends BaseTimeEntity {
     private Member member2;
 
     @Builder
-    public Friend(Member member1, Member member2, LocalDateTime becameFriendsAt) {
+    public Friend(Member member1, Member member2) {
         // ID가 작은 멤버를 member1으로, 큰 멤버를 member2로 설정
         if (member1.getId() < member2.getId()) {
             this.member1 = member1;
@@ -53,7 +48,6 @@ public class Friend extends BaseTimeEntity {
             this.member1 = member2;
             this.member2 = member1;
         }
-        this.becameFriendsAt = becameFriendsAt;
     }
 
     // 비즈니스 메서드
@@ -76,7 +70,6 @@ public class Friend extends BaseTimeEntity {
         return Friend.builder()
                         .member1(friendRequest.getRequester())
                         .member2(friendRequest.getReceiver())
-                        .becameFriendsAt(friendRequest.getRespondedAt())
                         .build();
     }
 }
