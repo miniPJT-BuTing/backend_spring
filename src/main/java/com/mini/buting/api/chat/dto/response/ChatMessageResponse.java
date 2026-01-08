@@ -1,5 +1,7 @@
-package com.mini.buting.api.chat.domain;
+package com.mini.buting.api.chat.dto.response;
 
+import com.mini.buting.api.chat.domain.MessageType;
+import com.mini.buting.api.chat.domain.MessageStatus;
 import com.mini.buting.api.chat.domain.payload.Payload;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,11 +10,11 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
 @Builder
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CachedChatMessage {
+public class ChatMessageResponse {
     private String messageId;
     private Long roomId;
     private Long messageSeq;
@@ -21,5 +23,6 @@ public class CachedChatMessage {
     private String content;
     private Payload payload;
     private LocalDateTime createdAt;
-    private Status status;
+    private MessageStatus messageStatus;
+
 }

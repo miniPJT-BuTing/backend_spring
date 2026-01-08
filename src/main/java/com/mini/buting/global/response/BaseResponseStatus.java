@@ -53,7 +53,7 @@ public enum BaseResponseStatus {
      */
     MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
     MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다."),
-
+    MATCH_REQUEST_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, false, 4001, "수락 된 매칭 요청이 아닙니다."),
     /**
      * 4100: MBTI 관련 에러
      */
@@ -73,10 +73,19 @@ public enum BaseResponseStatus {
      */
     UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4301, "존재하지 않는 대학입니다."),
     COLLEGE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4302, "존재하지 않는 단과대입니다."),
-    INVALID_UNIVERSITY_EMAIL(HttpStatus.BAD_REQUEST, false, 4303, "올바르지 않은 대학 이메일입니다.");
+    INVALID_UNIVERSITY_EMAIL(HttpStatus.BAD_REQUEST, false, 4303, "올바르지 않은 대학 이메일입니다."),
+
+
+    /**
+     * 5000: 채팅방 관련 에러
+     */
+    CHATROOM_NOT_EXISTS(HttpStatus.NOT_FOUND, false, 5001, "존재하지 않는 채팅방입니다."),
+    NOT_CHATROOM_MEMBER(HttpStatus.NOT_FOUND, false, 5002, "접근할 수 없는 채팅방입니다." ),
+    MESSAGE_PUBLISH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, false, 5002, "접근할 수 없는 채팅방입니다." );
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
     private final int code;
     private final String message;
+
 }

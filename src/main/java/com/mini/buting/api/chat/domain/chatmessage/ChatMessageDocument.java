@@ -1,5 +1,7 @@
-package com.mini.buting.api.chat.domain;
+package com.mini.buting.api.chat.domain.chatmessage;
 
+import com.mini.buting.api.chat.domain.MessageType;
+import com.mini.buting.api.chat.domain.MessageStatus;
 import com.mini.buting.api.chat.domain.payload.Payload;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -32,5 +34,5 @@ public class ChatMessageDocument {
     private String content;
     private Payload payload;
     private LocalDateTime createdAt;
-    private Status status;
+    private MessageStatus messageStatus;
 }

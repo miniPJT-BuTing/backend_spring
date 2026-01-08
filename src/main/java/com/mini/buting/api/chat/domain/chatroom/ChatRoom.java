@@ -1,7 +1,8 @@
-/*
-package com.mini.buting.api.chat.domain;
+
+package com.mini.buting.api.chat.domain.chatroom;
 
 import com.mini.buting.api.member.domain.Member;
+import com.mini.buting.api.team.domain.Team;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -63,4 +64,4 @@ public class ChatRoom {
     }
 }
 
-*/
+
