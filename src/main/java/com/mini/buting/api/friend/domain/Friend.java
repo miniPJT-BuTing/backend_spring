@@ -2,6 +2,8 @@ package com.mini.buting.api.friend.domain;
 
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.global.common.BaseTimeEntity;
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -65,7 +67,7 @@ public class Friend extends BaseTimeEntity {
         } else if (member2.equals(member)) {
             return member1;
         } else {
-            throw new IllegalArgumentException("해당 멤버는 이 친구 관계에 포함되지 않습니다.");
+            throw new BaseException(BaseResponseStatus.FRIEND_NOT_FOUND);
         }
     }
 
