@@ -1,18 +1,24 @@
 package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
+import com.mini.buting.api.chat.service.ChatRoomService;
 import com.mini.buting.api.chat.service.ChatService;
+import com.mini.buting.api.matchRequest.domain.MatchRequest;
+import com.mini.buting.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Controller
+@RestController
+@RequestMapping("/v1/chat")
 @RequiredArgsConstructor
 public class ChatController {
-    private final ChatService chatMessageProducer;
+    private final ChatService chatService;
 
     // 메시지 전송
     @MessageMapping("chat.message.{roomId}")
@@ -20,11 +26,11 @@ public class ChatController {
 
         // 추후 변경 예정
         Long senderId =  1L;
-        chatMessageProducer.sendMessage(message, senderId);
+        chatService.sendMessage(message, senderId);
 
     }
 
-    // 최근 메시지 조회
+    // 최근 메시지 조회 + 채팅방 정보 (제목, 인원, 참여한 멤버 ..., 공지)
 
     // 이전 메시지 조회
 
