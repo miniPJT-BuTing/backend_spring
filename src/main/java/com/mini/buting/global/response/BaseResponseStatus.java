@@ -42,6 +42,29 @@ public enum BaseResponseStatus {
     MEMBER_DELETED_USER(HttpStatus.FORBIDDEN, false, 2004, "탈퇴한 사용자의 프로필은 조회할 수 없습니다."),
 
     /**
+     * Friend Related Errors (친구 관련 에러)
+     */
+    // 친구 요청 관련 (2100번대)
+    FRIEND_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 2100, "처리할 수 없는 친구 요청입니다."),
+    FRIEND_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 2101, "만료된 친구 요청입니다."),
+    FRIEND_REQUEST_ALREADY_EXISTS(HttpStatus.CONFLICT, false, 2102, "이미 친구 요청이 존재합니다."),
+    FRIEND_REQUEST_TO_SELF(HttpStatus.BAD_REQUEST, false, 2103, "자기 자신에게는 친구 요청을 보낼 수 없습니다."),
+    FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, false, 2104, "친구 요청을 찾을 수 없습니다."),
+
+    // 친구 관계 관련 (2200번대)
+    ALREADY_FRIENDS(HttpStatus.CONFLICT, false, 2200, "이미 친구 관계입니다."),
+    NOT_FRIENDS(HttpStatus.BAD_REQUEST, false, 2201, "친구 관계가 아닙니다."),
+    FRIEND_BLOCKED(HttpStatus.FORBIDDEN, false, 2202, "차단된 사용자입니다."),
+    FRIEND_NOT_FOUND(HttpStatus.NOT_FOUND, false, 2203, "친구를 찾을 수 없습니다."),
+
+    // 권한 관련 (2300번대)
+    NO_PERMISSION_TO_RESPOND(HttpStatus.FORBIDDEN, false, 2300, "친구 요청에 응답할 권한이 없습니다."),
+    NO_PERMISSION_TO_CANCEL(HttpStatus.FORBIDDEN, false, 2301, "친구 요청을 취소할 권한이 없습니다."),
+
+    // 검색 관련 (2400번대)
+    INVALID_SEARCH_QUERY(HttpStatus.BAD_REQUEST, false, 2400, "유효하지 않은 검색어입니다."),
+
+    /**
      * 3000: Team Service 관련 에러
      */
     TEAM_FULL(HttpStatus.BAD_REQUEST, false, 3001, "팀 정원이 가득 찼습니다."),
