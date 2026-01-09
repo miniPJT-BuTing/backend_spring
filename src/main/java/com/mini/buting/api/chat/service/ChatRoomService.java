@@ -20,6 +20,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final SnowFlakeGenerator snowFlakeGenerator;
 
     // 채팅방 생성
     public ChatRoom createRoom(MatchRequest match) {
@@ -48,7 +49,7 @@ public class ChatRoomService {
 
     private ChatRoom createRoom(String title, Team maleTeam, Team femaleTeam, Member leader) {
         ChatRoom room = ChatRoom.builder()
-                .roomId(/* 생성 로직 */)
+                .roomId(snowFlakeGenerator.nextId())
                 .title(title)
                 .maleTeam(maleTeam)
                 .femaleTeam(femaleTeam)

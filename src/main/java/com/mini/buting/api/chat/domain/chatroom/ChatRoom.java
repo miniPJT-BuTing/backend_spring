@@ -41,6 +41,12 @@ public class ChatRoom {
     private Integer memberCount;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "type",   column = @Column(name="last_message_type")),
+            @AttributeOverride(name = "preview",column = @Column(name="last_message_preview", length=15)),
+            @AttributeOverride(name = "sentAt", column = @Column(name="last_message_sent_at")),
+            @AttributeOverride(name = "seq",    column = @Column(name="last_message_seq"))
+    })
     @Comment("채팅방의 마지막 메시지")
     private LastMessage lastMessage;
 

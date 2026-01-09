@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "chat_room_member",
         indexes = {
-                @Index(name = "idx_user_room", columnList = "user_id, room_id")
+                @Index(name = "idx_member_room", columnList = "member_id, room_id")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

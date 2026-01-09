@@ -38,7 +38,7 @@ public class RabbitMQConfig {
     // "chat.queue"라는 이름의 Queue 생성
     @Bean
     public Queue chatQueue() {
-        return new Queue(CHAT_QUEUE_NAME, true); // durable을 true로 제공
+        return new Queue(CHAT_QUEUE_NAME, true);
     }
 
     @Bean

@@ -60,3 +60,6 @@ rabbitmq:
     name: "chat.exchange"
   chat-routing:
     key: "chat.room.*"
+
+snowflake:
+  node-id: ${SNOWFLAKE_NODE_ID}
