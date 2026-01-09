@@ -24,4 +24,21 @@ public class CachedChatMessage {
     private Payload payload;
     private LocalDateTime createdAt;
     private MessageStatus messageStatus;
+
+    public static CachedChatMessage of(ChatMessageDocument message) {
+
+        // 타입별 payload 전처리?
+
+        return CachedChatMessage.builder()
+                .messageId(message.getId())
+                .roomId(message.getRoomId())
+                .messageSeq(message.getMessageSeq())
+                .type(message.getType())
+                .senderId(message.getSenderId())
+                .content(message.getContent())
+                .payload(message.getPayload())
+                .createdAt(message.getCreatedAt())
+                .messageStatus(message.getMessageStatus())
+                .build();
+    }
 }
