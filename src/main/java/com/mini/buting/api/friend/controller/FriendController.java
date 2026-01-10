@@ -2,6 +2,7 @@ package com.mini.buting.api.friend.controller;
 
 import com.mini.buting.api.friend.dto.request.FriendRequestCreateDto;
 import com.mini.buting.api.friend.dto.request.FriendRequestDto;
+import com.mini.buting.api.friend.dto.response.FriendListResponseDto;
 import com.mini.buting.api.friend.dto.response.FriendRequestResponseDto;
 import com.mini.buting.api.friend.service.FriendService;
 import com.mini.buting.global.response.BaseResponse;
@@ -76,6 +77,19 @@ public class FriendController {
 
         Page<FriendRequestResponseDto>
                         result = friendService.getReceivedFriendRequests(userId, pageable);
+
+        return ResponseEntity.ok(BaseResponse.onSuccess(result));
+    }
+
+    @Operation(summary = "내 친구 목록 조회", description = "내 친구 목록을 조회합니다.")
+    @GetMapping
+    public ResponseEntity<BaseResponse<Page<FriendListResponseDto>>> getFriendList(
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long userId, Pageable pageable) {
+
+        log.debug("내 친구 목록 조회 API 호출 - 회원: {}", userId);
+
+        Page<FriendListResponseDto> result = friendService.getFriendList(userId, pageable);
 
         return ResponseEntity.ok(BaseResponse.onSuccess(result));
     }
