@@ -10,7 +10,9 @@ import com.mini.buting.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,11 +27,12 @@ public class ChatController {
     private final ChatRoomService chatRoomService;
     private final MatchRequestRepository matchRequestRepository;
 
-    // 메시지 전송
+    // 메시지 전송 - senderId는 수정 예정
     @MessageMapping("chat.message.{roomId}")
-    public void sendMessage(@DestinationVariable String roomId, ChatMessageRequest message, Long senderId) {
-
-        // 추후 변경 예정
+    public void sendMessage(
+            @Payload ChatMessageRequest message,
+            @Header("senderId") Long senderId
+    ) {
         chatService.sendMessage(message, senderId);
     }
 
@@ -44,6 +47,7 @@ public class ChatController {
         ChatRoom room = chatRoomService.createRoom(matchRequest);
         return room.getRoomId() + " " + room.getTitle();
     }
+
 
     // 채팅방 목록 조회
 

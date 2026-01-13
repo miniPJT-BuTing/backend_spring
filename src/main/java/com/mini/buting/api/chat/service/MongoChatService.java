@@ -17,7 +17,7 @@ public class MongoChatService {
     //메시지 저장
     public ChatMessageDocument saveMessage(ChatMessageRequest message, Long senderId, long seq, String content) {
         ChatMessageDocument messageDocument = ChatMessageDocument.builder()
-                .roomId(message.roomId())
+                .roomId(Long.parseLong(message.roomId()))
                 .messageSeq(seq)
                 .type(message.type())
                 .senderId(senderId)

@@ -7,6 +7,7 @@ import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,10 @@ public class ChatService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     // 메시지 전송
+    @Transactional
     public void sendMessage(ChatMessageRequest message, Long senderId) {
 
-        Long roomId = message.roomId();
+        Long roomId = Long.parseLong(message.roomId());
 
         // 1) 채팅방 존재
         if (!chatRoomRepository.existsById(roomId)) {
@@ -38,7 +40,7 @@ public class ChatService {
         }
 
         // 3) seq 발급 (Redis INCR)
-        long seq = redisChatService.nextSeq(message.roomId());
+        long seq = redisChatService.nextSeq(roomId);
 
         String content = makePreview(message);
 
