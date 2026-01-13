@@ -41,7 +41,7 @@ public class ChatRoomService {
         }
 
         if (chatRoomRepository.existsByMaleTeamAndFemaleTeam(maleTeam, femaleTeam)) {
-            throw new IllegalStateException("이미 채팅방이 존재합니다.");
+            throw new IllegalStateException("!!!이미 채팅방이 존재합니다.");
         }
 
         return createRoom(match.getRequestTeam().getTitle(), maleTeam, femaleTeam, match.getRequestTeam().getLeader());
@@ -58,10 +58,14 @@ public class ChatRoomService {
                 .lastMessage(null)
                 .build();
 
+
+        ChatRoom saved = chatRoomRepository.save(room);
+        chatRoomRepository.flush();
+
         createMembers(room, maleTeam.getMembers());
         createMembers(room, femaleTeam.getMembers());
 
-        return chatRoomRepository.save(room);
+        return saved;
     }
 
     // 채팅방 목록 조회
