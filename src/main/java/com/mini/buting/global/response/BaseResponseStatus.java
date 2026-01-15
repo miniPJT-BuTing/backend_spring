@@ -104,7 +104,8 @@ public enum BaseResponseStatus {
      */
     CHATROOM_NOT_EXISTS(HttpStatus.NOT_FOUND, false, 5001, "존재하지 않는 채팅방입니다."),
     NOT_CHATROOM_MEMBER(HttpStatus.NOT_FOUND, false, 5002, "접근할 수 없는 채팅방입니다." ),
-    MESSAGE_PUBLISH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, false, 5002, "접근할 수 없는 채팅방입니다." );
+    MESSAGE_PUBLISH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, false, 5003, "메시지 전송에 실패했습니다." ),
+    CHATROOM_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, false, 5004, "이미 존재하는 채팅방입니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;

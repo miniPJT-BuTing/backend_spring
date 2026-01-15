@@ -14,4 +14,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = VotePayload.class, name = "VOTE"),
         @JsonSubTypes.Type(value = NoticePayload.class, name = "NOTICE")
 })
-public sealed interface Payload permits TextPayload, ImagePayload, NoticePayload, VotePayload {}
+public sealed interface Payload permits ImagePayload, NoticePayload, TextPayload, VotePayload, WelcomePayload {}

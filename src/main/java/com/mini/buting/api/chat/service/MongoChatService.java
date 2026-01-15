@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +32,14 @@ public class MongoChatService {
         return messageDocument;
     }
 
-    //메시지 불러오기 - 페이징
+    public List<ChatMessageDocument> findRecentMessages(Long roomId, int limit) {
+        if (limit == 50) {
+            return chatMessageRepository.findTop50ByRoomIdOrderByMessageSeqDesc(roomId);
+        }
+        return chatMessageRepository.findTop50ByRoomIdOrderByMessageSeqDesc(roomId)
+                .stream().limit(limit).toList();
+    }
+
+    // 메시지 불러오기
 
 }

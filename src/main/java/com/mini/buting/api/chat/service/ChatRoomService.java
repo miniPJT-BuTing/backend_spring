@@ -1,8 +1,13 @@
 package com.mini.buting.api.chat.service;
 
+import com.mini.buting.api.chat.domain.MessageType;
 import com.mini.buting.api.chat.domain.chatmessage.CachedChatMessage;
+import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
+import com.mini.buting.api.chat.domain.payload.Payload;
+import com.mini.buting.api.chat.domain.payload.WelcomePayload;
+import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
 import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
 import com.mini.buting.api.chat.dto.response.ChatRoomSummaryResponse;
@@ -28,6 +33,8 @@ public class ChatRoomService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final SnowFlakeGenerator snowFlakeGenerator;
     private final RedisChatService redisChatService;
+    private final MongoChatService mongoChatService;
+    private final ChatService chatService;
 
     // 채팅방 생성
     public ChatRoom createRoom(MatchRequest match) {
@@ -48,10 +55,25 @@ public class ChatRoomService {
         }
 
         if (chatRoomRepository.existsByMaleTeamAndFemaleTeam(maleTeam, femaleTeam)) {
-            throw new IllegalStateException("!!!이미 채팅방이 존재합니다.");
+            throw new BaseException(BaseResponseStatus.CHATROOM_ALREADY_EXISTS);
         }
 
-        return createRoom(match.getRequestTeam().getTitle(), maleTeam, femaleTeam, match.getRequestTeam().getLeader());
+        ChatRoom chatRoom = createRoom(match.getRequestTeam().getTitle(), maleTeam, femaleTeam, match.getRequestTeam().getLeader());
+
+        sendWelcomeMessage(chatRoom.getRoomId(), chatRoom.getLeader().getId());
+
+        return chatRoom;
+    }
+
+    private void sendWelcomeMessage(Long roomId, Long leaderId) {
+
+        ChatMessageRequest message = new ChatMessageRequest(
+                String.valueOf(roomId),
+                MessageType.WELCOME,
+                new WelcomePayload("매칭에 성공했어요! 대화를 나눠보세요.")
+        );
+
+        chatService.sendMessage(message, leaderId);
     }
 
     private ChatRoom createRoom(String title, Team maleTeam, Team femaleTeam, Member leader) {
@@ -111,11 +133,19 @@ public class ChatRoomService {
 
         // 최근 메시지 조회
         List<CachedChatMessage> messages = redisChatService.getRecentMessages(roomId);
+        if (messages.isEmpty()) {
+            List<ChatMessageDocument> fromMongo = mongoChatService.findRecentMessages(roomId, 50);
 
-        //채팅방 정보 조회
+            redisChatService.fillCacheFromMongo(roomId, fromMongo);
+
+            messages = fromMongo.stream()
+                    .map(CachedChatMessage::of)
+                    .toList();
+        }
+        // 채팅방 정보 조회
         ChatRoomSummaryResponse roomInfo = chatRoomRepository.findSummaryByRoomId(roomId);
 
-        //채팅방 멤버 조회
+        // 채팅방 멤버 조회
         List<ChatMemberResponse> allByIdRoomId = chatRoomMemberRepository.findChatMembersByRoomId(roomId);
 
         boolean hasMore = (messages.size() == 50);

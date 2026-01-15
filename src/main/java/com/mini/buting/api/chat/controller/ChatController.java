@@ -37,6 +37,7 @@ public class ChatController {
     }
 
     // 최근 메시지 조회 + 채팅방 정보 (제목, 인원, 참여한 멤버 ..., 공지)
+    // 공지 기능 구현 후에 추가하기!
     @GetMapping("/{roomId}")
     public BaseResponse<ChatRoomResponse> enterChatroom(
             @PathVariable String roomId,
@@ -54,6 +55,7 @@ public class ChatController {
     public String createChatroom(@RequestParam Long matchRequestId) throws IllegalAccessException {
         MatchRequest matchRequest = matchRequestRepository.findById(matchRequestId).orElseThrow(() -> new IllegalAccessException());
         ChatRoom room = chatRoomService.createRoom(matchRequest);
+
         return room.getRoomId() + " " + room.getTitle();
     }
 

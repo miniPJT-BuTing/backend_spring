@@ -72,4 +72,29 @@ public class RedisChatService {
         return result;
     }
 
+    public void fillCacheFromMongo(Long roomId, List<ChatMessageDocument> messagesDesc) {
+        if (messagesDesc == null || messagesDesc.isEmpty()) return;
+
+        String key = KEY_PREFIX + roomId + ":msgs";
+
+        List<String> values = new ArrayList<>(messagesDesc.size());
+
+        for (int i = messagesDesc.size() - 1; i >= 0; i--) {
+            CachedChatMessage cached = CachedChatMessage.of(messagesDesc.get(i));
+            try {
+                values.add(objectMapper.writeValueAsString(cached));
+            } catch (JsonProcessingException e) {
+                log.warn("serialize cached message failed : roomId[{}] seq[{}]", roomId, messagesDesc.get(i).getMessageSeq());
+            }
+        }
+
+        if (values.isEmpty()) return;
+
+        stringRedisTemplate.delete(key);
+
+        stringRedisTemplate.opsForList().leftPushAll(key, values);
+        stringRedisTemplate.opsForList().trim(key, 0, MAX_CACHE_SIZE - 1);
+        stringRedisTemplate.expire(key, Duration.ofDays(7));
+    }
+
 }
