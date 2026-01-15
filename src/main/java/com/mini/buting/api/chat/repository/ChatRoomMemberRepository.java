@@ -2,6 +2,7 @@ package com.mini.buting.api.chat.repository;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMemberId;
+import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,7 +19,24 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
 
     boolean existsByIdRoomIdAndIdMemberId(Long roomId, Long memberId);
 
-    List<ChatRoomMember> findAllByIdRoomId(Long roomId);
+    @Query("""
+        select new com.mini.buting.api.chat.dto.response.ChatMemberResponse(
+            m.id,
+            m.nickname,
+            m.gender,
+            (m.id = cr.leader.id),
+            u.name,
+            c.name
+        )
+        from ChatRoomMember crm
+            join crm.member m
+            join crm.chatRoom cr
+            left join m.universityDomain ud
+            left join ud.university u
+            left join m.college c
+        where crm.chatRoom.roomId = :roomId
+    """)
+    List<ChatMemberResponse> findChatMembersByRoomId(@Param("roomId") Long roomId);
 
     List<ChatRoomMember> findAllByIdMemberId(Long memberId);
 

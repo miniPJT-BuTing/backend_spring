@@ -3,6 +3,7 @@ package com.mini.buting.api.chat.domain.chatroom;
 
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.team.domain.Team;
+import com.mini.buting.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import org.springframework.data.domain.Persistable;
 @Entity
 @Getter
 @NoArgsConstructor
-public class ChatRoom implements Persistable<Long> {
+public class ChatRoom extends BaseTimeEntity implements Persistable<Long>{
     @Id
     @Comment("채팅방 식별자")
     private Long roomId;

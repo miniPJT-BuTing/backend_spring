@@ -1,6 +1,8 @@
 package com.mini.buting.api.chat.repository;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
+import com.mini.buting.api.chat.dto.response.ChatRoomSummaryResponse;
+import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.team.domain.Team;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,10 +11,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     boolean existsByMaleTeamAndFemaleTeam(Team maleTeam, Team femaleTeam);
+        @Query("""
+        select new com.mini.buting.api.chat.dto.response.ChatRoomSummaryResponse(
+            cast(cr.roomId as string),
+            cr.title,
+            cr.memberCount,
+            cr.createdAt
+        )
+        from ChatRoom cr
+        where cr.roomId = :roomId
+    """)
+        ChatRoomSummaryResponse findSummaryByRoomId(@Param("roomId") Long roomId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """

@@ -2,21 +2,21 @@ package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
+import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
+import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
 import com.mini.buting.api.chat.service.ChatRoomService;
 import com.mini.buting.api.chat.service.ChatService;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.matchRequest.repository.MatchRequestRepository;
 import com.mini.buting.global.response.BaseResponse;
+import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -37,6 +37,15 @@ public class ChatController {
     }
 
     // 최근 메시지 조회 + 채팅방 정보 (제목, 인원, 참여한 멤버 ..., 공지)
+    @GetMapping("/{roomId}")
+    public BaseResponse<ChatRoomResponse> enterChatroom(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId
+    ){
+        ChatRoomResponse roomInfo = chatRoomService.enterChatroom(roomId, senderId);
+
+        return BaseResponse.onSuccess(roomInfo);
+    }
 
     // 이전 메시지 조회
 
