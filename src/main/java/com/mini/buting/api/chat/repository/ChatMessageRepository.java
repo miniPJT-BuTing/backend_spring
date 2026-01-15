@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends MongoRepository<ChatMessageDocument, Long> {
     List<ChatMessageDocument> findTop50ByRoomIdOrderByMessageSeqDesc(Long roomId);
+
+    List<ChatMessageDocument> findTop50ByRoomIdAndMessageSeqLessThanOrderByMessageSeqDesc(Long roomId, Long beforeSeq);
 }

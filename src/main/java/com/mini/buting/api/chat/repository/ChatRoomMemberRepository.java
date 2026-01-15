@@ -1,5 +1,6 @@
 package com.mini.buting.api.chat.repository;
 
+import com.mini.buting.api.chat.domain.chatmessage.MessageUnreadRow;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMemberId;
 import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
@@ -53,4 +54,15 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     int updateLastReadSeqMax(@Param("roomId") Long roomId,
                              @Param("memberId") Long memberId,
                              @Param("newSeq") Long newSeq);
+
+    @Query(value = """
+        SELECT s.message_seq AS messageSeq,
+               SUM(CASE WHEN crm.last_read_seq < s.message_seq THEN 1 ELSE 0 END) AS unreadCount
+        FROM chat_room_member crm
+        JOIN JSON_TABLE(:seqJson, '$[*]' COLUMNS(message_seq BIGINT PATH '$')) s
+        WHERE crm.room_id = :roomId
+        GROUP BY s.message_seq
+        """, nativeQuery = true)
+    List<MessageUnreadRow> findUnreadCounts(@Param("roomId") Long roomId,
+                                                  @Param("seqJson") String seqJson);
 }

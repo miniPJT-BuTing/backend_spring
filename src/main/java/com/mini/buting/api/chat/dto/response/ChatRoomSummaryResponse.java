@@ -6,5 +6,6 @@ public record ChatRoomSummaryResponse(
         String roomId,
         String title,
         Integer memberCount,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Long lastMessageSeq
 ) {}

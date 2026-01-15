@@ -8,12 +8,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
 @Document(collection = "chat_messages")
+@CompoundIndexes({
+        @CompoundIndex(name = "idx_room_seq", def = "{'roomId': 1, 'messageSeq': -1}")
+})
 @Getter
 @Builder
 @NoArgsConstructor
@@ -23,10 +28,7 @@ public class ChatMessageDocument {
     @Id
     private String id;
 
-    @Indexed
     private Long roomId;
-
-    @Indexed
     private Long messageSeq;
 
     private MessageType type;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.buting.api.chat.domain.chatmessage.CachedChatMessage;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
+import com.mini.buting.api.chat.dto.response.ChatMessageResponse;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,7 @@ public class RedisChatService {
 
 
     // 최근 메시지 조회
-    public List<CachedChatMessage> getRecentMessages(Long roomId){
+    public List<ChatMessageResponse> getRecentMessages(Long roomId){
         String key = KEY_PREFIX + roomId + ":msgs";
         List<String> jsonList = stringRedisTemplate.opsForList().range(key, 0, MAX_CACHE_SIZE - 1);
         if (jsonList == null || jsonList.isEmpty()) return List.of();
@@ -69,7 +70,8 @@ public class RedisChatService {
                 log.warn("deserialize cached message failed : roomId["+ roomId + "], json=[" + json + "]");
             }
         }
-        return result;
+
+        return result.stream().map(ChatMessageResponse::of).toList();
     }
 
     public void fillCacheFromMongo(Long roomId, List<ChatMessageDocument> messagesDesc) {

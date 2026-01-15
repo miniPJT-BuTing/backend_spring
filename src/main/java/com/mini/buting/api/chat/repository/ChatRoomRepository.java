@@ -21,7 +21,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             cast(cr.roomId as string),
             cr.title,
             cr.memberCount,
-            cr.createdAt
+            cr.createdAt,
+            cr.lastMessage.seq
         )
         from ChatRoom cr
         where cr.roomId = :roomId

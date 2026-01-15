@@ -40,6 +40,10 @@ public class MongoChatService {
                 .stream().limit(limit).toList();
     }
 
+    public List<ChatMessageDocument> findMessages(Long roomId, Long beforeSeq) {
+        return chatMessageRepository.findTop50ByRoomIdAndMessageSeqLessThanOrderByMessageSeqDesc(roomId, beforeSeq);
+    }
+
     // 메시지 불러오기
 
 }

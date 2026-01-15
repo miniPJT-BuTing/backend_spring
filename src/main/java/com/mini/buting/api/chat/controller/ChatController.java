@@ -3,6 +3,7 @@ package com.mini.buting.api.chat.controller;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
+import com.mini.buting.api.chat.dto.response.ChatMessagesResponse;
 import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
 import com.mini.buting.api.chat.service.ChatRoomService;
 import com.mini.buting.api.chat.service.ChatService;
@@ -17,6 +18,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -36,7 +39,7 @@ public class ChatController {
         chatService.sendMessage(message, senderId);
     }
 
-    // 최근 메시지 조회 + 채팅방 정보 (제목, 인원, 참여한 멤버 ..., 공지)
+    // 채팅방 정보 (제목, 인원, 참여한 멤버 ..., 공지)
     // 공지 기능 구현 후에 추가하기!
     @GetMapping("/{roomId}")
     public BaseResponse<ChatRoomResponse> enterChatroom(
@@ -49,13 +52,24 @@ public class ChatController {
     }
 
     // 이전 메시지 조회
+    @GetMapping("/{roomId}/messages")
+    //beforeSeq=12345
+    public BaseResponse<ChatMessagesResponse> getMessages(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestParam Long beforeSeq
+    ){
+        ChatMessagesResponse messages = chatRoomService.getMessages(roomId, senderId, beforeSeq);
+
+        return BaseResponse.onSuccess(messages);
+    }
 
     // 채팅방 생성 (테스트용. 실서비스에서는 api 없음)
     @PostMapping
     public String createChatroom(@RequestParam Long matchRequestId) throws IllegalAccessException {
         MatchRequest matchRequest = matchRequestRepository.findById(matchRequestId).orElseThrow(() -> new IllegalAccessException());
         ChatRoom room = chatRoomService.createRoom(matchRequest);
-
+        chatRoomService.sendWelcomeMessage(room.getRoomId(), room.getLeader().getId());
         return room.getRoomId() + " " + room.getTitle();
     }
 

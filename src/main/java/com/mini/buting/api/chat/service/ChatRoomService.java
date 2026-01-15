@@ -1,16 +1,17 @@
 package com.mini.buting.api.chat.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.buting.api.chat.domain.MessageType;
 import com.mini.buting.api.chat.domain.chatmessage.CachedChatMessage;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
+import com.mini.buting.api.chat.domain.chatmessage.MessageUnreadRow;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
 import com.mini.buting.api.chat.domain.payload.Payload;
 import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
-import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
-import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
-import com.mini.buting.api.chat.dto.response.ChatRoomSummaryResponse;
+import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -35,6 +38,7 @@ public class ChatRoomService {
     private final RedisChatService redisChatService;
     private final MongoChatService mongoChatService;
     private final ChatService chatService;
+    private final ObjectMapper objectMapper;
 
     // 채팅방 생성
     public ChatRoom createRoom(MatchRequest match) {
@@ -58,14 +62,10 @@ public class ChatRoomService {
             throw new BaseException(BaseResponseStatus.CHATROOM_ALREADY_EXISTS);
         }
 
-        ChatRoom chatRoom = createRoom(match.getRequestTeam().getTitle(), maleTeam, femaleTeam, match.getRequestTeam().getLeader());
-
-        sendWelcomeMessage(chatRoom.getRoomId(), chatRoom.getLeader().getId());
-
-        return chatRoom;
+        return createRoom(match.getRequestTeam().getTitle(), maleTeam, femaleTeam, match.getRequestTeam().getLeader());
     }
 
-    private void sendWelcomeMessage(Long roomId, Long leaderId) {
+    public void sendWelcomeMessage(Long roomId, Long leaderId) {
 
         ChatMessageRequest message = new ChatMessageRequest(
                 String.valueOf(roomId),
@@ -88,18 +88,13 @@ public class ChatRoomService {
                 .build();
 
 
-        ChatRoom saved = chatRoomRepository.save(room);
-        chatRoomRepository.flush();
+        ChatRoom saved = chatRoomRepository.saveAndFlush(room);
 
-        createMembers(room, maleTeam.getMembers());
-        createMembers(room, femaleTeam.getMembers());
+        createMembers(saved, maleTeam.getMembers());
+        createMembers(saved, femaleTeam.getMembers());
 
         return saved;
     }
-
-    // 채팅방 목록 조회
-
-
 
     // 채팅방 생성 시 멤버랑 연결
     public void createMembers(ChatRoom chatRoom, List<Member> participants) {
@@ -119,8 +114,87 @@ public class ChatRoomService {
     public ChatRoomResponse enterChatroom(String roomIdStr, Long senderId) {
 
         Long roomId = Long.parseLong(roomIdStr);
-        System.out.println(roomId);
-        System.out.println(senderId);
+
+        checkAuth(senderId, roomId);
+
+        // 채팅방 정보 조회
+        ChatRoomSummaryResponse roomInfo = chatRoomRepository.findSummaryByRoomId(roomId);
+
+        // 채팅방 멤버 조회
+        List<ChatMemberResponse> allByIdRoomId = chatRoomMemberRepository.findChatMembersByRoomId(roomId);
+
+        markAsRead(roomId, senderId, roomInfo.lastMessageSeq());
+
+        ChatMessagesResponse messages = getMessages(roomIdStr, senderId, null);
+
+        return new ChatRoomResponse(roomInfo, allByIdRoomId, messages);
+    }
+
+    private List<ChatMessageResponse> getRecentMessages(Long roomId) {
+        // 최근 메시지 조회
+        List<ChatMessageResponse> messages = redisChatService.getRecentMessages(roomId);
+        if (messages.isEmpty()) {
+            List<ChatMessageDocument> fromMongo = mongoChatService.findRecentMessages(roomId, 50);
+
+            redisChatService.fillCacheFromMongo(roomId, fromMongo);
+
+            messages = fromMongo.stream()
+                    .map(ChatMessageResponse::of)
+                    .toList();
+        }
+        return messages;
+    }
+
+    public ChatMessagesResponse getMessages(String roomIdStr, Long senderId, Long beforeSeq) {
+
+        Long roomId = Long.parseLong(roomIdStr);
+
+        checkAuth(senderId, roomId);
+
+        List<ChatMessageResponse> messages = null;
+
+        // 입장의 경우
+        if(beforeSeq == null){
+            messages = getRecentMessages(roomId);
+        }
+        else{
+
+            List<ChatMessageDocument> fromMongo = mongoChatService.findMessages(roomId, beforeSeq);
+
+            messages = fromMongo.stream()
+                    .map(ChatMessageResponse::of)
+                    .toList();
+        }
+
+        if (messages.isEmpty()) {
+            return new ChatMessagesResponse(roomIdStr, List.of(), null, false);
+        }
+
+        try{
+
+            List<Long> seqs = messages.stream()
+                    .map(ChatMessageResponse::getMessageSeq)
+                    .toList();
+
+            String seqJson = objectMapper.writeValueAsString(seqs);
+
+            Map<Long, Long> unreadMap = chatRoomMemberRepository.findUnreadCounts(roomId, seqJson).stream()
+                    .collect(Collectors.toMap(MessageUnreadRow::getMessageSeq, MessageUnreadRow::getUnreadCount));
+
+            messages.forEach(msg -> msg.setUnreadCount(unreadMap.getOrDefault(msg.getMessageSeq(), 0L)));
+
+        } catch (JsonProcessingException e) {
+            throw new BaseException(BaseResponseStatus.MESSAGE_LOAD_FAIL);
+        }
+
+        boolean hasMore = (messages.size() == 50);
+        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getMessageSeq();
+
+        return new ChatMessagesResponse(roomIdStr, messages, nextCursor, hasMore);
+
+    }
+
+    private void checkAuth(Long senderId, Long roomId) {
         // 1) 채팅방 존재
         if (!chatRoomRepository.existsById(roomId)) {
             throw new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS);
@@ -130,39 +204,18 @@ public class ChatRoomService {
         if (!chatRoomMemberRepository.existsByIdRoomIdAndIdMemberId(roomId, senderId)) {
             throw new BaseException(BaseResponseStatus.NOT_CHATROOM_MEMBER);
         }
-
-        // 최근 메시지 조회
-        List<CachedChatMessage> messages = redisChatService.getRecentMessages(roomId);
-        if (messages.isEmpty()) {
-            List<ChatMessageDocument> fromMongo = mongoChatService.findRecentMessages(roomId, 50);
-
-            redisChatService.fillCacheFromMongo(roomId, fromMongo);
-
-            messages = fromMongo.stream()
-                    .map(CachedChatMessage::of)
-                    .toList();
-        }
-        // 채팅방 정보 조회
-        ChatRoomSummaryResponse roomInfo = chatRoomRepository.findSummaryByRoomId(roomId);
-
-        // 채팅방 멤버 조회
-        List<ChatMemberResponse> allByIdRoomId = chatRoomMemberRepository.findChatMembersByRoomId(roomId);
-
-        boolean hasMore = (messages.size() == 50);
-
-        Long nextCursor = messages.get(messages.size() - 1).getMessageSeq();
-
-        return new ChatRoomResponse(roomInfo, allByIdRoomId, messages, nextCursor, hasMore);
     }
 
     // 채팅방 목록 읽음 처리
-    /*public void markAsRead(Long roomId, Long userId, Long newSeq) {
+    public void markAsRead(Long roomId, Long userId, Long newSeq) {
         if (newSeq == null) return;
         int updated = chatRoomMemberRepository.updateLastReadSeqMax(roomId, userId, newSeq);
 
         // 혹시 데이터가 없으면 예외
         if (updated == 0) {
-
+            throw new BaseException(BaseResponseStatus.NOT_CHATROOM_MEMBER);
         }
-    }*/
+    }
+
+    // 채팅방 목록 조회
 }
