@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+
     boolean existsByMaleTeamAndFemaleTeam(Team maleTeam, Team femaleTeam);
         @Query("""
         select new com.mini.buting.api.chat.dto.response.ChatRoomSummaryResponse(

@@ -3,9 +3,11 @@ package com.mini.buting.api.chat.controller;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.request.ChatReadRequest;
+import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
 import com.mini.buting.api.chat.dto.response.ChatMessagesResponse;
 import com.mini.buting.api.chat.dto.response.ChatRoomInfoResponse;
 import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
+import com.mini.buting.api.chat.dto.response.ChatRoomUpdateResponse;
 import com.mini.buting.api.chat.service.ChatReadNotifier;
 import com.mini.buting.api.chat.service.ChatRoomListService;
 import com.mini.buting.api.chat.service.ChatRoomService;
@@ -98,6 +100,15 @@ public class ChatController {
     }
 
     // 채팅방 타이틀 변경
+    @PutMapping("/{roomId}")
+    public BaseResponse<ChatRoomUpdateResponse> updateChatRoomTitle(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody ChatRoomUpdateRequest chatRoomUpdateRequest
+    ){
+        ChatRoomUpdateResponse updateRoom = chatRoomService.updateChatRoomTitle(roomId, senderId, chatRoomUpdateRequest);
+        return BaseResponse.onSuccess(updateRoom);
+    }
 
     // 공지 등록
 

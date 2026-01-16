@@ -1,6 +1,7 @@
 
 package com.mini.buting.api.chat.domain.chatroom;
 
+import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.global.common.BaseTimeEntity;
@@ -88,6 +89,10 @@ public class ChatRoom extends BaseTimeEntity implements Persistable<Long>{
     @PostPersist
     private void markNotNew() {
         this.isNew = false;
+    }
+
+    public void setTitle(ChatRoomUpdateRequest request){
+        this.title = request.title();
     }
 }
 

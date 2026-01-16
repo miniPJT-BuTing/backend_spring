@@ -9,6 +9,7 @@ import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
 import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
+import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
 import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -220,4 +222,30 @@ public class ChatRoomService {
         chatRoomListService.notifyRoomUpdated(roomId);
     }
 
+    public ChatRoomUpdateResponse updateChatRoomTitle(String roomIdStr, Long senderId, ChatRoomUpdateRequest request) {
+
+        Long roomId = Long.parseLong(roomIdStr);
+
+        // 1) 채팅방 존재
+        if (!chatRoomRepository.existsById(roomId)) {
+            throw new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS);
+        }
+
+        // 2) 권한
+        if (!chatRoomMemberRepository.existsByIdRoomIdAndIdMemberId(roomId, senderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_CHATROOM_MEMBER);
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
+        if (!chatRoom.getLeader().getId().equals(senderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
+        }
+
+        chatRoom.setTitle(request);
+
+        chatRoomListService.notifyRoomUpdated(roomId);
+
+        return new ChatRoomUpdateResponse(roomIdStr, request.title());
+    }
 }
