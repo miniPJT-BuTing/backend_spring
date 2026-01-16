@@ -22,6 +22,7 @@ public class ChatService {
     private final ChatPublisher chatPublisher;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatRoomListService chatRoomListService;
 
     // 메시지 전송
     @Transactional
@@ -70,11 +71,9 @@ public class ChatService {
             log.warn("chatroom redis caching failed : room[" + message.roomId() + "] seq[" + seq + "]");
         }
 
+        // 채팅방 목록용 이벤트
+        chatRoomListService.notifyRoomUpdated(roomId);
 
-        //5. (옵션) 채팅방 목록용 이벤트
-
-
-        // log.info("sendMessage: roomId={}, message={}, sender={}", roomId, content, senderId);
     }
 
     private String makePreview(ChatMessageRequest message) {
@@ -94,11 +93,5 @@ public class ChatService {
                 return text.length() <= 15 ? text : text.substring(0, 15);
         }
     }
-
-
-    // 채팅방 읽음 처리
-
-
-
 
 }

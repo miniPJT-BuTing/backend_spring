@@ -4,6 +4,8 @@ import com.mini.buting.api.chat.domain.chatmessage.MessageUnreadRow;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMemberId;
 import com.mini.buting.api.chat.dto.response.ChatMemberResponse;
+import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
+import com.mini.buting.api.chat.dto.response.RoomMemberReadProjection;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -39,7 +41,28 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     """)
     List<ChatMemberResponse> findChatMembersByRoomId(@Param("roomId") Long roomId);
 
-    List<ChatRoomMember> findAllByIdMemberId(Long memberId);
+    @Query("""
+        select new com.mini.buting.api.chat.dto.response.ChatRoomResponse(
+            cast(cr.roomId as string),
+            cr.title,
+            cr.memberCount,
+            cr.createdAt,
+            new com.mini.buting.api.chat.dto.response.LastMessageResponse(
+                cr.lastMessage.preview,
+                cr.lastMessage.sentAt,
+                cr.lastMessage.seq
+            ),
+            case
+                    when cr.lastMessage.seq is null then 0
+                    else greatest(0, cr.lastMessage.seq - crm.lastReadSeq)
+            end
+        )
+        from ChatRoomMember crm
+        join crm.chatRoom cr
+        where crm.member.id = :memberId
+        order by cr.lastMessage.sentAt desc nulls last, cr.createdAt desc
+    """)
+    List<ChatRoomResponse> findChatRoomsForMember(@Param("memberId") Long memberId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
@@ -65,4 +88,14 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
         """, nativeQuery = true)
     List<MessageUnreadRow> findUnreadCounts(@Param("roomId") Long roomId,
                                                   @Param("seqJson") String seqJson);
+
+    @Query("""
+        select 
+            crm.member.id as memberId,
+            crm.lastReadSeq as lastReadSeq
+        from ChatRoomMember crm
+        where crm.chatRoom.roomId = :roomId
+        """)
+    List<RoomMemberReadProjection> findMemberReadsByRoomId(@Param("roomId") Long roomId);
+
 }

@@ -3,12 +3,10 @@ package com.mini.buting.api.chat.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.buting.api.chat.domain.MessageType;
-import com.mini.buting.api.chat.domain.chatmessage.CachedChatMessage;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.domain.chatmessage.MessageUnreadRow;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
 import com.mini.buting.api.chat.domain.chatroom.ChatRoomMember;
-import com.mini.buting.api.chat.domain.payload.Payload;
 import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.*;
@@ -39,6 +37,7 @@ public class ChatRoomService {
     private final MongoChatService mongoChatService;
     private final ChatService chatService;
     private final ObjectMapper objectMapper;
+    private final ChatRoomListService chatRoomListService;
 
     // 채팅방 생성
     public ChatRoom createRoom(MatchRequest match) {
@@ -93,6 +92,8 @@ public class ChatRoomService {
         createMembers(saved, maleTeam.getMembers());
         createMembers(saved, femaleTeam.getMembers());
 
+        chatRoomListService.notifyRoomUpdated(saved.getRoomId());
+
         return saved;
     }
 
@@ -111,7 +112,7 @@ public class ChatRoomService {
     }
 
     //채팅방 입장
-    public ChatRoomResponse enterChatroom(String roomIdStr, Long senderId) {
+    public ChatRoomInfoResponse enterChatroom(String roomIdStr, Long senderId) {
 
         Long roomId = Long.parseLong(roomIdStr);
 
@@ -127,7 +128,7 @@ public class ChatRoomService {
 
         ChatMessagesResponse messages = getMessages(roomIdStr, senderId, null);
 
-        return new ChatRoomResponse(roomInfo, allByIdRoomId, messages);
+        return new ChatRoomInfoResponse(roomInfo, allByIdRoomId, messages);
     }
 
     private List<ChatMessageResponse> getRecentMessages(Long roomId) {
@@ -215,7 +216,8 @@ public class ChatRoomService {
         if (updated == 0) {
             throw new BaseException(BaseResponseStatus.NOT_CHATROOM_MEMBER);
         }
+
+        chatRoomListService.notifyRoomUpdated(roomId);
     }
 
-    // 채팅방 목록 조회
 }

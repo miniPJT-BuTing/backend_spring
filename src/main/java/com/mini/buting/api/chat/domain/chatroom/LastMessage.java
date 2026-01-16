@@ -4,10 +4,12 @@ import com.mini.buting.api.chat.domain.MessageType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Embeddable
+@Getter
 public class LastMessage {
 
     @Enumerated(EnumType.STRING)
