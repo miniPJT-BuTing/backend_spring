@@ -1,8 +1,17 @@
 package com.mini.buting.api.chat.domain.payload;
 
-import com.mini.buting.api.chat.domain.payload.ImagePayload;
-import com.mini.buting.api.chat.domain.payload.NoticePayload;
-import com.mini.buting.api.chat.domain.payload.TextPayload;
-import com.mini.buting.api.chat.domain.payload.VotePayload;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-public sealed interface Payload permits TextPayload, ImagePayload, NoticePayload, VotePayload {}
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "payloadType"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = TextPayload.class, name = "TEXT"),
+        @JsonSubTypes.Type(value = ImagePayload.class, name = "IMAGE"),
+        @JsonSubTypes.Type(value = VotePayload.class, name = "VOTE"),
+        @JsonSubTypes.Type(value = NoticePayload.class, name = "NOTICE")
+})
+public sealed interface Payload permits ImagePayload, NoticePayload, TextPayload, VotePayload, WelcomePayload {}

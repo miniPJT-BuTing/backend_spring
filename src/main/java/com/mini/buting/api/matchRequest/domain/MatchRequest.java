@@ -85,6 +85,12 @@ public class MatchRequest extends BaseTimeEntity {
         }
     }
 
+    public void validateAcceptedStatus() {
+        if(status != MatchRequestStatus.ACCEPTED){
+            throw new BaseException((BaseResponseStatus.MATCH_REQUEST_NOT_ACCEPTED));
+        }
+    }
+
     // Enum 정의
     public enum MatchRequestStatus {
         PENDING,    // 대기중

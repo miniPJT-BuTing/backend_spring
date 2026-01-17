@@ -1,17 +1,21 @@
-/*
-package com.mini.buting.api.chat.domain;
 
+package com.mini.buting.api.chat.domain.chatroom;
+
+import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
 import com.mini.buting.api.member.domain.Member;
+import com.mini.buting.api.team.domain.Team;
+import com.mini.buting.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Getter
 @NoArgsConstructor
-public class ChatRoom {
+public class ChatRoom extends BaseTimeEntity implements Persistable<Long>{
     @Id
     @Comment("채팅방 식별자")
     private Long roomId;
@@ -40,8 +44,17 @@ public class ChatRoom {
     private Integer memberCount;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "type",   column = @Column(name="last_message_type")),
+            @AttributeOverride(name = "preview",column = @Column(name="last_message_preview", length=15)),
+            @AttributeOverride(name = "sentAt", column = @Column(name="last_message_sent_at")),
+            @AttributeOverride(name = "seq",    column = @Column(name="last_message_seq"))
+    })
     @Comment("채팅방의 마지막 메시지")
     private LastMessage lastMessage;
+
+    @Transient
+    private boolean isNew = true;
 
     @Builder
     private ChatRoom(
@@ -61,6 +74,26 @@ public class ChatRoom {
         this.memberCount = memberCount;
         this.lastMessage = lastMessage;
     }
+
+    @Override
+    public Long getId() {
+        return roomId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    private void markNotNew() {
+        this.isNew = false;
+    }
+
+    public void setTitle(ChatRoomUpdateRequest request){
+        this.title = request.title();
+    }
 }
 
-*/
+
