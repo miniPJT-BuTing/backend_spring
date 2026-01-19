@@ -1,16 +1,19 @@
 <!--
 🔀 Develop PR (제목을 입력해주세요)
+🚑️ Hotfix MR (제목을 입력해주세요)
 
 📌 사용 예시:
-[🔀 FE] 로그인 페이지 UI 수정
-[🔀 BE] 사용자 인증 로직 리팩토링
+[🔀 FE]
+[🔀 BE]
+[🚑️ BE]
+[🚑️ FE]
 
 ⚠️ (괄호) 항목은 모두 지우고 알맞게 작성해주세요.
 -->
 
 ### 🔗 Connected Issue
 
-Closes miniPJT-BuTing/buting#(이슈번호)
+Closes #(이슈번호)
 
 ### 📅 Development Period
 
