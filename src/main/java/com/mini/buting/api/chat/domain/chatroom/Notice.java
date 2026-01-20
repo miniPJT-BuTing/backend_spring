@@ -11,29 +11,30 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Access(AccessType.FIELD)
 @NoArgsConstructor
 public class Notice extends BaseTimeEntity {
     @Id
     @Column(name = "room_id", nullable = false)
-    Long id;
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "room_id")
-    ChatRoom chatRoom;
+    private ChatRoom chatRoom;
 
     @Column(name = "place", nullable = false, length = 50)
-    String place;
+    private String place;
 
     @Column(name = "meet_at", nullable = false)
-    LocalDateTime meetAt;
+    private LocalDateTime meetAt;
 
     @Column(name = "description", nullable = false, length = 500)
-    String description;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by", nullable = false)
-    Member updatedBy;
+    private Member updatedBy;
 
     public static Notice create(ChatRoom chatRoom, NoticeUpsertRequest request, Member member) {
         Notice notice = new Notice();

@@ -132,6 +132,18 @@ public class ChatController {
         return BaseResponse.onSuccess(notice);
     }
 
+    // 공지 삭제
+    @DeleteMapping("/{roomId}/notice")
+    public BaseResponse<Void> deleteNotice(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        noticeService.delete(roomId, senderId);
+
+        return BaseResponse.onSuccess();
+    }
+
     // 메시지 좋아요
 
     // 투표 등록

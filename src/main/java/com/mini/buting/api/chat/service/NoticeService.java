@@ -14,7 +14,10 @@ import com.mini.buting.api.chat.repository.NoticeRepository;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.response.BaseResponseStatus;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,8 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
+    @PersistenceContext
+    private EntityManager em;
 
     @Transactional
     public NoticeResponse upsertNotice(String roomIdStr, Long senderId, NoticeUpsertRequest request) {
@@ -79,6 +84,25 @@ public class NoticeService {
 
         chatRoomService.checkAuth(senderId, roomId);
 
+        if(!noticeRepository.existsById(roomId))
+            throw new BaseException(BaseResponseStatus.NOTICE_NOT_FOUND);
+
         return noticeRepository.findNoticeInfoById(roomId);
+    }
+
+    @Transactional
+    public void delete(String roomIdStr, Long senderId) {
+        Long roomId = Long.parseLong(roomIdStr);
+
+        chatRoomService.checkAuth(senderId, roomId);
+
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
+        chatRoomService.isLeader(senderId, room);
+
+        int deleted = noticeRepository.deleteByRoomId(roomId);
+        if (deleted == 0) {
+            throw new BaseException(BaseResponseStatus.NOTICE_NOT_FOUND);
+        }
     }
 }

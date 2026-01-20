@@ -4,6 +4,7 @@ import com.mini.buting.api.chat.domain.chatroom.Notice;
 import com.mini.buting.api.chat.dto.response.NoticeViewResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
     @Query("""
         select new com.mini.buting.api.chat.dto.response.NoticeViewResponse(
+            cast(nt.id as string),
             nt.place,
             nt.meetAt,
             nt.description,
@@ -24,4 +26,8 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
         where nt.id = :roomId
     """)
     NoticeViewResponse findNoticeInfoById(@Param("roomId")Long roomId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from Notice n where n.id = :roomId")
+    int deleteByRoomId(@Param("roomId") Long roomId);
 }
