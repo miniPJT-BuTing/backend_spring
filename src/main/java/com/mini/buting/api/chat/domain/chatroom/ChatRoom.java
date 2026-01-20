@@ -2,6 +2,7 @@
 package com.mini.buting.api.chat.domain.chatroom;
 
 import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
+import com.mini.buting.api.chat.dto.request.NoticeUpsertRequest;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.global.common.BaseTimeEntity;
@@ -56,6 +57,11 @@ public class ChatRoom extends BaseTimeEntity implements Persistable<Long>{
     @Transient
     private boolean isNew = true;
 
+    // ChatRoom
+    @OneToOne(mappedBy = "chatRoom", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private Notice notice;
+
     @Builder
     private ChatRoom(
             Long roomId,
@@ -93,6 +99,18 @@ public class ChatRoom extends BaseTimeEntity implements Persistable<Long>{
 
     public void setTitle(ChatRoomUpdateRequest request){
         this.title = request.title();
+    }
+
+    public void setNotice(Notice notice) {
+        this.notice = notice;
+    }
+
+    public void upsertNotice(NoticeUpsertRequest request, Member updatedBy) {
+        if (this.notice == null) {
+            this.notice = Notice.create(this, request, updatedBy);
+        } else {
+            this.notice.update(request, updatedBy);
+        }
     }
 }
 

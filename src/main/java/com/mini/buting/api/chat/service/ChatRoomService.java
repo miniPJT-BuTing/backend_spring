@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -197,7 +196,7 @@ public class ChatRoomService {
 
     }
 
-    private void checkAuth(Long senderId, Long roomId) {
+    public void checkAuth(Long senderId, Long roomId) {
         // 1) 채팅방 존재
         if (!chatRoomRepository.existsById(roomId)) {
             throw new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS);
@@ -238,14 +237,19 @@ public class ChatRoomService {
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
-        if (!chatRoom.getLeader().getId().equals(senderId)) {
-            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
-        }
+
+        isLeader(senderId, chatRoom);
 
         chatRoom.setTitle(request);
 
         chatRoomListService.notifyRoomUpdated(roomId);
 
         return new ChatRoomUpdateResponse(roomIdStr, request.title());
+    }
+
+    public void isLeader(Long senderId, ChatRoom chatRoom) {
+        if (!chatRoom.getLeader().getId().equals(senderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
+        }
     }
 }
