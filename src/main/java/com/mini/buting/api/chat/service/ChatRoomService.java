@@ -15,6 +15,7 @@ import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.member.domain.Member;
+import com.mini.buting.api.team.domain.Gender;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
@@ -50,7 +51,7 @@ public class ChatRoomService {
         Team femaleTeam;
 
         Team requestTeam = match.getRequestTeam();
-        if(requestTeam.getGender() == Team.Gender.MALE){
+        if(requestTeam.getGender() == Gender.MALE){
             maleTeam = requestTeam;
             femaleTeam = match.getTargetTeam();
         }
