@@ -1,8 +1,10 @@
 package com.mini.buting.api.chat.service;
 
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
+import com.mini.buting.api.chat.domain.payload.NoticePayload;
 import com.mini.buting.api.chat.domain.payload.TextPayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
+import com.mini.buting.api.chat.dto.response.NoticeAction;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.global.exception.BaseException;
@@ -85,7 +87,14 @@ public class ChatService {
                 return "사진을 보냈습니다.";
 
             case NOTICE:
-                return "공지가 등록되었습니다.";
+                if(message.payload() instanceof NoticePayload){
+                    if (((NoticePayload) message.payload()).action().equals(NoticeAction.CREATED))
+                        return "공지가 등록되었습니다.";
+                    else return "공지가 수정되었습니다.";
+                }
+                else{
+                    throw new BaseException(BaseResponseStatus.MESSAGE_PUBLISH_FAILED);
+                }
 
             default:
                 TextPayload payload = (TextPayload) message.payload();
