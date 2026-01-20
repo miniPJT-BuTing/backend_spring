@@ -113,15 +113,24 @@ public class ChatController {
             @PathVariable String roomId,
             @RequestHeader("senderId") Long senderId,
             @RequestBody NoticeUpsertRequest request
-            ){
+    ){
 
         NoticeResponse notice = noticeService.upsertNotice(roomId, senderId, request);
 
         return BaseResponse.onSuccess(notice);
     }
 
-
     // 공지 조회
+    @GetMapping("/{roomId}/notice")
+    public BaseResponse<NoticeViewResponse> getNotice(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        NoticeViewResponse notice = noticeService.getNotice(roomId, senderId);
+
+        return BaseResponse.onSuccess(notice);
+    }
 
     // 메시지 좋아요
 

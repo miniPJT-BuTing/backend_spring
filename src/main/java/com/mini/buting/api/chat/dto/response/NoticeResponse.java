@@ -41,16 +41,4 @@ public record NoticeResponse(
         );
     }
 
-    public static NoticeResponse viewed(Notice notice){
-        return new NoticeResponse(
-                NoticeAction.VIEWED,
-                notice.getId().toString(),
-                notice.getPlace(),
-                notice.getMeetAt(),
-                notice.getDescription(),
-                notice.getUpdatedAt(),
-                notice.getUpdatedBy().getNickname(),
-                notice.getUpdatedBy().getId()
-        );
-    }
 }

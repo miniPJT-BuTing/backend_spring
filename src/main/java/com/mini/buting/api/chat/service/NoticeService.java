@@ -8,6 +8,7 @@ import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.request.NoticeUpsertRequest;
 import com.mini.buting.api.chat.dto.response.ChatMessagesResponse;
 import com.mini.buting.api.chat.dto.response.NoticeResponse;
+import com.mini.buting.api.chat.dto.response.NoticeViewResponse;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.api.chat.repository.NoticeRepository;
 import com.mini.buting.api.member.domain.Member;
@@ -70,5 +71,14 @@ public class NoticeService {
                         response.action()
                 )
         );
+    }
+
+    public NoticeViewResponse getNotice(String roomIdStr, Long senderId) {
+
+        Long roomId  = Long.parseLong(roomIdStr);
+
+        chatRoomService.checkAuth(senderId, roomId);
+
+        return noticeRepository.findNoticeInfoById(roomId);
     }
 }
