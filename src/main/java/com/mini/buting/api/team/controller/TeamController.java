@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/teams")
+@RequestMapping("/v1/teams")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Team", description = "팀 관련 API")
