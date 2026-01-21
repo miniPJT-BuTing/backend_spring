@@ -44,7 +44,8 @@ public class NoticeService {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
 
-        chatRoomService.isLeader(senderId, room);
+        // 방장인지 확인
+        //chatRoomService.isLeader(senderId, room);
 
         Member member = memberRepository.findByIdWithDetails(senderId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));

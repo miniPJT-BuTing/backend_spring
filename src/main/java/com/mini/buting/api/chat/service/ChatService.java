@@ -29,7 +29,7 @@ public class ChatService {
 
     // 메시지 전송
     @Transactional
-    public void sendMessage(ChatMessageRequest message, Long senderId) {
+    public String sendMessage(ChatMessageRequest message, Long senderId) {
 
         Long roomId = Long.parseLong(message.roomId());
 
@@ -77,6 +77,7 @@ public class ChatService {
         // 채팅방 목록용 이벤트
         chatRoomListService.notifyRoomUpdated(roomId);
 
+        return messageDocument.getId();
     }
 
     private String makePreview(ChatMessageRequest message) {

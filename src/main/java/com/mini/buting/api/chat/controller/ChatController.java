@@ -1,11 +1,7 @@
 package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
-import com.mini.buting.api.chat.domain.chatroom.Notice;
-import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
-import com.mini.buting.api.chat.dto.request.ChatReadRequest;
-import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
-import com.mini.buting.api.chat.dto.request.NoticeUpsertRequest;
+import com.mini.buting.api.chat.dto.request.*;
 import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.service.*;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
@@ -32,6 +28,7 @@ public class ChatController {
     private final ChatReadNotifier chatReadNotifier;
     private final ChatRoomListService chatRoomListService;
     private final NoticeService noticeService;
+    private final VoteService voteService;
 
     // 메시지 전송 - senderId는 수정 예정
     @MessageMapping("chat.message.{roomId}")
@@ -147,6 +144,18 @@ public class ChatController {
     // 메시지 좋아요
 
     // 투표 등록
+    @PostMapping("/{roomId}/vote")
+    public BaseResponse<VoteInfoResponse> createVote(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody VoteCreateRequest vote
+            ){
+
+        VoteInfoResponse voteInfoResponse = voteService.createVote(roomId, senderId, vote);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
+
 
     // 투표 조회
 

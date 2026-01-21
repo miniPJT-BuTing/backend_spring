@@ -108,7 +108,8 @@ public enum BaseResponseStatus {
     CHATROOM_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, false, 5004, "이미 존재하는 채팅방입니다."),
     MESSAGE_LOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 5005, "메시지 조회에 실패했습니다."),
     NOT_TEAM_LEADER(HttpStatus.NOT_FOUND, false, 5006, "해당 기능의 권한이 없습니다." ),
-    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5007, "공지사항이 존재하지 않습니다." );
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5007, "공지사항이 존재하지 않습니다." ),
+    VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5008, "투표가 존재하지 않습니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
