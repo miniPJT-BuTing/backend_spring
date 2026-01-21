@@ -111,10 +111,11 @@ public enum BaseResponseStatus {
     /**
      * 4500: 팀 시스템 관련 에러
      */
-    TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4504, "팀을 찾을 수 없습니다."),
-    ALREADY_TEAM_LEADER(HttpStatus.BAD_REQUEST, false, 4505, "이미 다른 팀의 팀장입니다."),
-    TEAM_SIZE_MISMATCH(HttpStatus.BAD_REQUEST, false, 4507, "초대할 멤버 수가 팀 크기와 일치하지 않습니다."),
-    TEAM_NOT_READY(HttpStatus.BAD_REQUEST, false, 4508, "모든 멤버가 수락해야 팀이 활성화됩니다."),
+    TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4501, "팀을 찾을 수 없습니다."),
+    ALREADY_TEAM_LEADER(HttpStatus.BAD_REQUEST, false, 4502, "이미 다른 팀의 팀장입니다."),
+    TEAM_SIZE_MISMATCH(HttpStatus.BAD_REQUEST, false, 4503, "초대할 멤버 수가 팀 크기와 일치하지 않습니다."),
+    DIFFERENT_GENDER_CANNOT_INVITE(HttpStatus.BAD_REQUEST, false, 4504, "다른 성별의 사용자는 초대할 수 없습니다."),
+    TEAM_NOT_READY(HttpStatus.BAD_REQUEST, false, 4505, "모든 멤버가 수락해야 팀이 활성화됩니다."),
 
     /**
      * 5000: 채팅방 관련 에러
