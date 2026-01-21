@@ -3,6 +3,7 @@ package com.mini.buting.api.chat.service;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.domain.payload.NoticePayload;
 import com.mini.buting.api.chat.domain.payload.TextPayload;
+import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.NoticeAction;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
@@ -95,12 +96,16 @@ public class ChatService {
                 else{
                     throw new BaseException(BaseResponseStatus.MESSAGE_PUBLISH_FAILED);
                 }
-
+            case WELCOME:
+                return "매칭에 성공했어요! 대화를 나눠보세요";
             default:
-                TextPayload payload = (TextPayload) message.payload();
-                String text = payload.text();
-                return text.length() <= 15 ? text : text.substring(0, 15);
+                if(message.payload() instanceof TextPayload){
+                    TextPayload payload = (TextPayload) message.payload();
+                    String text = payload.text();
+                    return text.length() <= 20 ? text : text.substring(0, 20);
+                }
         }
+        return null;
     }
 
 }
