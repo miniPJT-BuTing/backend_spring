@@ -30,66 +30,63 @@ public class TeamController {
     @Operation(summary = "팀 생성", description = "새로운 팀을 생성하고 멤버들을 초대합니다.")
     @PostMapping
     public ResponseEntity<BaseResponse<TeamResponseDto.CreateTeamResponse>> createTeam(
-            @Parameter(description = "팀장 ID", required = true)
-            @RequestHeader("X-User-Id") Long leaderId,
-            @Valid @RequestBody TeamRequestDto.CreateTeamRequest request) {
+                    @Parameter(description = "팀장 ID", required = true) @RequestHeader("X-User-Id")
+                    Long leaderId, @Valid @RequestBody TeamRequestDto.CreateTeamRequest request) {
 
         log.info("팀 생성 API 호출 - leaderId: {}", leaderId);
 
         TeamResponseDto.CreateTeamResponse response = teamService.createTeam(leaderId, request);
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(BaseResponse.onSuccess(response));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "친구 검색", description = "팀 초대를 위해 친구를 검색합니다.")
     @GetMapping("/friends/search")
     public ResponseEntity<BaseResponse<TeamResponseDto.SearchFriendsResponse>> searchFriends(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("X-User-Id") Long memberId,
-            @Parameter(description = "검색 키워드 (닉네임 또는 이메일)")
-            @RequestParam(required = false) String keyword) {
+                    @Parameter(description = "사용자 ID", required = true) @RequestHeader("X-User-Id")
+                    Long memberId,
+                    @Parameter(description = "검색 키워드 (닉네임 또는 이메일)") @RequestParam(required = false)
+                    String keyword) {
 
         log.info("친구 검색 API 호출 - memberId: {}, keyword: {}", memberId, keyword);
 
-        TeamRequestDto.SearchFriendsRequest request = TeamRequestDto.SearchFriendsRequest.builder()
-                .keyword(keyword)
-                .build();
+        TeamRequestDto.SearchFriendsRequest request =
+                        TeamRequestDto.SearchFriendsRequest.builder().keyword(keyword).build();
 
-        TeamResponseDto.SearchFriendsResponse response = teamService.searchFriends(memberId, request);
-        
+        TeamResponseDto.SearchFriendsResponse response =
+                        teamService.searchFriends(memberId, request);
+
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "받은 초대 목록", description = "사용자가 받은 팀 초대 목록을 조회합니다.")
     @GetMapping("/invitations/received")
     public ResponseEntity<BaseResponse<List<TeamResponseDto.TeamInvitationDetailResponse>>> getReceivedInvitations(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("X-User-Id") Long memberId) {
+                    @Parameter(description = "사용자 ID", required = true) @RequestHeader("X-User-Id")
+                    Long memberId) {
 
         log.info("받은 초대 목록 API 호출 - memberId: {}", memberId);
 
-        List<TeamResponseDto.TeamInvitationDetailResponse> response = 
-                teamInvitationService.getReceivedInvitations(memberId);
-        
+        List<TeamResponseDto.TeamInvitationDetailResponse> response =
+                        teamInvitationService.getReceivedInvitations(memberId);
+
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "초대 응답", description = "팀 초대를 수락하거나 거절합니다.")
     @PatchMapping("/invitations/{invitationId}/respond")
     public ResponseEntity<BaseResponse<TeamResponseDto.RespondToInvitationResponse>> respondToInvitation(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("X-User-Id") Long memberId,
-            @Parameter(description = "초대 ID", required = true)
-            @PathVariable Long invitationId,
-            @Valid @RequestBody TeamRequestDto.RespondToInvitationRequest request) {
+                    @Parameter(description = "사용자 ID", required = true) @RequestHeader("X-User-Id")
+                    Long memberId, @Parameter(description = "초대 ID", required = true) @PathVariable
+                    Long invitationId,
+                    @Valid @RequestBody TeamRequestDto.RespondToInvitationRequest request) {
 
-        log.info("초대 응답 API 호출 - memberId: {}, invitationId: {}, accept: {}", 
-                memberId, invitationId, request.accept());
+        log.info("초대 응답 API 호출 - memberId: {}, invitationId: {}, accept: {}", memberId,
+                        invitationId, request.accept());
 
-        TeamResponseDto.RespondToInvitationResponse response = 
-                teamInvitationService.respondToInvitation(memberId, invitationId, request);
-        
+        TeamResponseDto.RespondToInvitationResponse response =
+                        teamInvitationService.respondToInvitation(memberId, invitationId, request);
+
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 }

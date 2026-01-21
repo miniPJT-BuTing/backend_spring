@@ -9,7 +9,7 @@ import com.mini.buting.api.team.dto.request.TeamRequestDto;
 import com.mini.buting.api.team.dto.response.TeamResponseDto;
 import com.mini.buting.api.team.repository.TeamInvitationRepository;
 import com.mini.buting.api.team.repository.TeamMemberRepository;
-import com.mini.buting.api.team.repository.TeamRepository;  // ✅ 추가
+import com.mini.buting.api.team.repository.TeamRepository;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
@@ -28,50 +28,51 @@ public class TeamInvitationService {
 
     private final TeamInvitationRepository teamInvitationRepository;
     private final MemberRepository memberRepository;
-    private final TeamRepository teamRepository;  // ✅ 추가
+    private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
 
     /**
      * 받은 초대 목록 조회
      */
-    public List<TeamResponseDto.TeamInvitationDetailResponse> getReceivedInvitations(Long memberId) {
-        log.info("받은 초대 목록 조회 - memberId: {}", memberId);
+    public List<TeamResponseDto.TeamInvitationDetailResponse> getReceivedInvitations(
+                    Long memberId) {
+        log.debug("받은 초대 목록 조회 - memberId: {}", memberId);
 
         Member member = memberRepository.findById(memberId)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
-        List<TeamInvitation> invitations = teamInvitationRepository
-                        .findPendingInvitationsByInvitee(member, LocalDateTime.now());
+        List<TeamInvitation> invitations =
+                        teamInvitationRepository.findPendingInvitationsByInvitee(member,
+                                        LocalDateTime.now());
 
-        return invitations.stream()
-                        .map(this::convertToDetailResponse)
-                        .toList();
+        return invitations.stream().map(this::convertToDetailResponse).toList();
     }
 
     /**
      * 초대 응답 (수락/거절) - 완전 수정 버전
      */
     @Transactional
-    public TeamResponseDto.RespondToInvitationResponse respondToInvitation(
-                    Long memberId, Long invitationId, TeamRequestDto.RespondToInvitationRequest request) {
+    public TeamResponseDto.RespondToInvitationResponse respondToInvitation(Long memberId,
+                    Long invitationId, TeamRequestDto.RespondToInvitationRequest request) {
 
-        log.info("초대 응답 - memberId: {}, invitationId: {}, accept: {}",
-                        memberId, invitationId, request.accept());
+        log.debug("초대 응답 - memberId: {}, invitationId: {}, accept: {}", memberId, invitationId,
+                        request.accept());
 
         Member member = memberRepository.findById(memberId)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
-        TeamInvitation invitation = teamInvitationRepository
-                        .findByIdAndInvitee(invitationId, member)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_INVITATION_NOT_FOUND));
+        TeamInvitation invitation =
+                        teamInvitationRepository.findByIdAndInvitee(invitationId, member)
+                                        .orElseThrow(() -> new BaseException(
+                                                        BaseResponseStatus.TEAM_INVITATION_NOT_FOUND));
 
         // 만료 확인 및 처리
         invitation.expireIfNeeded();
 
         if (!invitation.canBeProcessed()) {
-            throw new BaseException(invitation.isExpired()
-                            ? BaseResponseStatus.TEAM_INVITATION_EXPIRED
-                            : BaseResponseStatus.TEAM_INVITATION_NOT_PENDING);
+            throw new BaseException(invitation.isExpired() ?
+                            BaseResponseStatus.TEAM_INVITATION_EXPIRED :
+                            BaseResponseStatus.TEAM_INVITATION_NOT_PENDING);
         }
 
         String responseMessage;
@@ -80,7 +81,7 @@ public class TeamInvitationService {
             invitation.accept();
             teamInvitationRepository.save(invitation);
 
-            // 2. ✅ TeamMemberRepository로 직접 저장 (컬렉션 조작 X)
+            // 2. TeamMemberRepository로 직접 저장 (컬렉션 조작 X)
             Team team = invitation.getTeam();
             TeamMember newMember = TeamMember.of(team, member);
             teamMemberRepository.save(newMember);  // 직접 저장!
@@ -89,7 +90,7 @@ public class TeamInvitationService {
             checkAndActivateTeam(team);
 
             responseMessage = "팀 초대를 수락했습니다.";
-            log.info("팀 멤버 추가 완료 - teamId: {}, memberId: {}", team.getId(), member.getId());
+            log.debug("팀 멤버 추가 완료 - teamId: {}, memberId: {}", team.getId(), member.getId());
 
         } else {
             // 거절 처리
@@ -98,62 +99,61 @@ public class TeamInvitationService {
             responseMessage = "팀 초대를 거절했습니다.";
         }
 
-        log.info("초대 응답 완료 - invitationId: {}, status: {}",
-                        invitation.getId(), invitation.getStatus());
+        log.debug("초대 응답 완료 - invitationId: {}, status: {}", invitation.getId(),
+                        invitation.getStatus());
 
         return TeamResponseDto.RespondToInvitationResponse.builder()
-                        .invitationId(invitation.getId())
-                        .status(invitation.getStatus())
-                        .message(responseMessage)
-                        .build();
+                        .invitationId(invitation.getId()).status(invitation.getStatus())
+                        .message(responseMessage).build();
     }
 
     /**
      * 팀 활성화 확인 및 처리 - 디버깅 버전
      */
     private void checkAndActivateTeam(Team team) {
-        log.info("=== 팀 활성화 체크 시작 - teamId: {} ===", team.getId());
+        log.debug("=== 팀 활성화 체크 시작 - teamId: {} ===", team.getId());
 
         // 1. 모든 초대가 수락되었는지 확인
         boolean allInvitationsAccepted = teamInvitationRepository.areAllInvitationsAccepted(team);
-        log.info("모든 초대 수락 여부: {}", allInvitationsAccepted);
+        log.debug("모든 초대 수락 여부: {}", allInvitationsAccepted);
 
         // 2. 현재 멤버 수 조회
         long currentMemberCount = teamMemberRepository.countByTeam(team);
         long targetMemberCount = team.getTeamSize().getSize();
-        log.info("현재 멤버 수: {} / 목표 멤버 수: {}", currentMemberCount, targetMemberCount);
+        log.debug("현재 멤버 수: {} / 목표 멤버 수: {}", currentMemberCount, targetMemberCount);
 
         // 3. 팀 현재 상태 확인
-        log.info("팀 현재 오픈 상태: {}", team.getIsOpen());
+        log.debug("팀 현재 오픈 상태: {}", team.getIsOpen());
 
         // 4. 각 조건별 체크
-        log.info("조건1 - 모든 초대 수락: {}", allInvitationsAccepted);
-        log.info("조건2 - 멤버 수 일치: {} == {} = {}", currentMemberCount, targetMemberCount, currentMemberCount == targetMemberCount);
-        log.info("조건3 - 아직 비활성: {}", !team.getIsOpen());
+        log.debug("조건1 - 모든 초대 수락: {}", allInvitationsAccepted);
+        log.debug("조건2 - 멤버 수 일치: {} == {} = {}", currentMemberCount, targetMemberCount,
+                        currentMemberCount == targetMemberCount);
+        log.debug("조건3 - 아직 비활성: {}", !team.getIsOpen());
 
         if (allInvitationsAccepted && currentMemberCount == targetMemberCount && !team.getIsOpen()) {
-            log.info("🎉 모든 조건 만족! 팀 활성화 실행!");
+            log.debug("모든 조건 만족, 팀 활성화 실행");
             team.activate();
             teamRepository.save(team);
 
-            log.info("🎉 팀 활성화 완료! - teamId: {}, memberCount: {}/{}",
-                            team.getId(), currentMemberCount, targetMemberCount);
+            log.debug("팀 활성화 완료! - teamId: {}, memberCount: {}/{}", team.getId(),
+                            currentMemberCount, targetMemberCount);
         } else {
-            log.warn("❌ 팀 활성화 조건 미달성 - teamId: {}", team.getId());
+            log.debug("팀 활성화 조건 미달성 - teamId: {}", team.getId());
 
             // 상세한 미달성 이유 출력
             if (!allInvitationsAccepted) {
-                log.warn("  - 이유: 아직 수락되지 않은 초대가 있음");
+                log.debug("  - 이유: 아직 수락되지 않은 초대가 있음");
             }
             if (currentMemberCount != targetMemberCount) {
-                log.warn("  - 이유: 멤버 수 불일치 ({}/{})", currentMemberCount, targetMemberCount);
+                log.debug("  - 이유: 멤버 수 불일치 ({}/{})", currentMemberCount, targetMemberCount);
             }
             if (team.getIsOpen()) {
-                log.warn("  - 이유: 이미 활성화된 팀");
+                log.debug("  - 이유: 이미 활성화된 팀");
             }
         }
 
-        log.info("=== 팀 활성화 체크 종료 ===");
+        log.debug("=== 팀 활성화 체크 종료 ===");
     }
 
     /**
@@ -161,49 +161,46 @@ public class TeamInvitationService {
      */
     @Transactional
     public void expireOldInvitations() {
-        List<TeamInvitation> expiredInvitations = teamInvitationRepository
-                        .findExpiredPendingInvitations(LocalDateTime.now());
+        List<TeamInvitation> expiredInvitations =
+                        teamInvitationRepository.findExpiredPendingInvitations(LocalDateTime.now());
 
         expiredInvitations.forEach(TeamInvitation::expireIfNeeded);
-        teamInvitationRepository.saveAll(expiredInvitations);  // ✅ 일괄 저장 추가
+        teamInvitationRepository.saveAll(expiredInvitations);
 
-        log.info("만료된 초대 정리 완료 - count: {}", expiredInvitations.size());
+        log.debug("만료된 초대 정리 완료 - count: {}", expiredInvitations.size());
     }
 
     /**
      * 초대 상세 응답 변환
      */
-    private TeamResponseDto.TeamInvitationDetailResponse convertToDetailResponse(TeamInvitation invitation) {
+    private TeamResponseDto.TeamInvitationDetailResponse convertToDetailResponse(
+                    TeamInvitation invitation) {
         Team team = invitation.getTeam();
         Member inviter = invitation.getInviter();
 
         return TeamResponseDto.TeamInvitationDetailResponse.builder()
                         .invitationId(invitation.getId())
-                        .teamInfo(TeamResponseDto.TeamInfo.builder()
-                                        .teamId(team.getId())
-                                        .title(team.getTitle())
-                                        .description(team.getDescription())
+                        .teamInfo(TeamResponseDto.TeamInfo.builder().teamId(team.getId())
+                                        .title(team.getTitle()).description(team.getDescription())
                                         .teamSize(team.getTeamSize())
                                         .preferredMood(team.getPreferredMood())
                                         .preferredAgeMin(team.getPreferredAgeMin().intValue())
                                         .preferredAgeMax(team.getPreferredAgeMax().intValue())
-                                        .preferredEntryYearMin(team.getPreferredEntryYearMin().intValue())
-                                        .preferredEntryYearMax(team.getPreferredEntryYearMax().intValue())
+                                        .preferredEntryYearMin(
+                                                        team.getPreferredEntryYearMin().intValue())
+                                        .preferredEntryYearMax(
+                                                        team.getPreferredEntryYearMax().intValue())
                                         .currentMemberCount(team.getCurrentMemberCount())
-                                        .targetMemberCount(team.getTeamSize().getSize())
-                                        .build())
-                        .inviterInfo(TeamResponseDto.MemberInfo.builder()
-                                        .memberId(inviter.getId())
-                                        .nickname(inviter.getNickname())
-                                        .age(inviter.getAge())
+                                        .targetMemberCount(team.getTeamSize().getSize()).build())
+                        .inviterInfo(TeamResponseDto.MemberInfo.builder().memberId(inviter.getId())
+                                        .nickname(inviter.getNickname()).age(inviter.getAge())
                                         .bio(inviter.getBio())
                                         .universityName(inviter.getUniversity().getName())
-                                        .collegeName(inviter.getCollege() != null ? inviter.getCollege().getName() : null)
-                                        .build())
-                        .status(invitation.getStatus())
-                        .createdAt(invitation.getCreatedAt())
-                        .expiredAt(invitation.getExpiredAt())
-                        .isExpired(invitation.isExpired())
+                                        .collegeName(inviter.getCollege() != null ?
+                                                        inviter.getCollege().getName() :
+                                                        null).build())
+                        .status(invitation.getStatus()).createdAt(invitation.getCreatedAt())
+                        .expiredAt(invitation.getExpiredAt()).isExpired(invitation.isExpired())
                         .build();
     }
 }

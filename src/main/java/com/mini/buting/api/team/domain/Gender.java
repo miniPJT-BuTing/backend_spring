@@ -1,6 +1,5 @@
 package com.mini.buting.api.team.domain;
 
-import com.mini.buting.api.member.domain.Member;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -10,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum Gender {
-    MALE("남성"),
-    FEMALE("여성");
+    MALE("남성"), FEMALE("여성");
 
     private final String displayName;
 

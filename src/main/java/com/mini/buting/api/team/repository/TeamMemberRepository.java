@@ -13,22 +13,22 @@ import java.util.List;
 
 @Repository
 public interface TeamMemberRepository extends JpaRepository<TeamMember, TeamMemberId> {
-    
+
     /**
      * 팀과 멤버로 팀멤버 존재 여부 확인
      */
     boolean existsByTeamAndMember(Team team, Member member);
-    
+
     /**
      * 팀의 모든 멤버 조회
      */
     List<TeamMember> findByTeam(Team team);
-    
+
     /**
      * 멤버의 모든 팀 조회
      */
     List<TeamMember> findByMember(Member member);
-    
+
     /**
      * 팀과 멤버로 팀멤버 삭제
      */

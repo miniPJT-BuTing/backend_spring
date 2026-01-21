@@ -15,18 +15,16 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "team_invitation",
-        indexes = {
-                @Index(name = "idx_team_invitation_team", columnList = "team_id"),
-                @Index(name = "idx_team_invitation_inviter", columnList = "inviter_id"),
-                @Index(name = "idx_team_invitation_invitee", columnList = "invitee_id"),
-                @Index(name = "idx_team_invitation_status", columnList = "status"),
-                @Index(name = "idx_team_invitation_created", columnList = "created_at")
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_team_invitation_pair", 
-                                columnNames = {"team_id", "invitee_id"})
-        }
-)
+                indexes = {@Index(name = "idx_team_invitation_team", columnList = "team_id"),
+                                @Index(name = "idx_team_invitation_inviter",
+                                                columnList = "inviter_id"),
+                                @Index(name = "idx_team_invitation_invitee",
+                                                columnList = "invitee_id"),
+                                @Index(name = "idx_team_invitation_status", columnList = "status"),
+                                @Index(name = "idx_team_invitation_created",
+                                                columnList = "created_at")}, uniqueConstraints = {
+                @UniqueConstraint(name = "uk_team_invitation_pair",
+                                columnNames = {"team_id", "invitee_id"})})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Comment("팀 초대 관리 테이블")
@@ -53,19 +51,19 @@ public class TeamInvitation extends BaseTimeEntity {
     // 연관관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false,
-                foreignKey = @ForeignKey(name = "FK_team_invitation_team"))
+                    foreignKey = @ForeignKey(name = "FK_team_invitation_team"))
     @Comment("초대된 팀")
     private Team team;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inviter_id", nullable = false,
-                foreignKey = @ForeignKey(name = "FK_team_invitation_inviter"))
+                    foreignKey = @ForeignKey(name = "FK_team_invitation_inviter"))
     @Comment("초대를 보낸 사람 (팀장)")
     private Member inviter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invitee_id", nullable = false,
-                foreignKey = @ForeignKey(name = "FK_team_invitation_invitee"))
+                    foreignKey = @ForeignKey(name = "FK_team_invitation_invitee"))
     @Comment("초대받은 사람")
     private Member invitee;
 

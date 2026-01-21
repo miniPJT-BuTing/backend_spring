@@ -100,8 +100,8 @@ public class Team extends BaseTimeEntity {
     @Builder
     public Team(String title, Byte preferredAgeMin, Byte preferredAgeMax,
                     Byte preferredEntryYearMin, Byte preferredEntryYearMax, TeamSize teamSize,
-                    com.mini.buting.api.team.domain.Gender gender, TeamMood preferredMood, String description, Boolean isOpen,
-                    Member leader) {
+                    com.mini.buting.api.team.domain.Gender gender, TeamMood preferredMood,
+                    String description, Boolean isOpen, Member leader) {
         this.title = title;
         this.preferredAgeMin = preferredAgeMin;
         this.preferredAgeMax = preferredAgeMax;

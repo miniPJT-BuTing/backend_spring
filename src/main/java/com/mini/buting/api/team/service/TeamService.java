@@ -39,13 +39,14 @@ public class TeamService {
      * 팀 생성
      */
     @Transactional
-    public TeamResponseDto.CreateTeamResponse createTeam(Long leaderId, TeamRequestDto.CreateTeamRequest request) {
-        log.info("팀 생성 요청 - leaderId: {}, teamSize: {}, inviteCount: {}",
-                        leaderId, request.teamSize(), request.inviteMemberIds().size());
+    public TeamResponseDto.CreateTeamResponse createTeam(Long leaderId,
+                    TeamRequestDto.CreateTeamRequest request) {
+        log.debug("팀 생성 요청 - leaderId: {}, teamSize: {}, inviteCount: {}", leaderId,
+                        request.teamSize(), request.inviteMemberIds().size());
 
         // 1. 팀장 조회
         Member leader = memberRepository.findById(leaderId)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
         // 2. 팀장이 이미 다른 팀의 리더인지 확인
         if (teamRepository.existsByLeader(leader)) {
@@ -56,45 +57,36 @@ public class TeamService {
         List<Member> invitees = validateAndGetInvitees(leader, request.inviteMemberIds());
 
         // 4. 팀 생성
-        Team team = Team.builder()
-                        .title(request.title())
-                        .description(request.description())
-                        .preferredMood(request.preferredMood())
-                        .teamSize(request.teamSize())
+        Team team = Team.builder().title(request.title()).description(request.description())
+                        .preferredMood(request.preferredMood()).teamSize(request.teamSize())
                         .preferredAgeMin(request.preferredAgeMin().byteValue())
                         .preferredAgeMax(request.preferredAgeMax().byteValue())
                         .preferredEntryYearMin(request.preferredEntryYearMin().byteValue())
                         .preferredEntryYearMax(request.preferredEntryYearMax().byteValue())
-                        .gender(Gender.fromMemberGender(leader.getGender()))
-                        .leader(leader)
+                        .gender(Gender.fromMemberGender(leader.getGender())).leader(leader)
                         .isOpen(false) // 모든 멤버가 수락해야 true
                         .build();
 
         Team savedTeam = teamRepository.save(team);
 
-        // ✅ 5. 팀장을 팀 멤버로 추가 - 직접 저장
+        // 5. 팀장을 팀 멤버로 추가 - 직접 저장
         TeamMember leaderMember = TeamMember.of(savedTeam, leader);
         teamMemberRepository.save(leaderMember);  // 직접 저장!
-        log.info("팀장 멤버 추가 완료 - teamId: {}, leaderId: {}", savedTeam.getId(), leader.getId());
+        log.debug("팀장 멤버 추가 완료 - teamId: {}, leaderId: {}", savedTeam.getId(), leader.getId());
 
         // 6. 초대 생성
         List<TeamInvitation> invitations = invitees.stream()
-                        .map(invitee -> TeamInvitation.builder()
-                                        .team(savedTeam)
-                                        .inviter(leader)
-                                        .invitee(invitee)
-                                        .build())
-                        .collect(Collectors.toList());
+                        .map(invitee -> TeamInvitation.builder().team(savedTeam).inviter(leader)
+                                        .invitee(invitee).build()).collect(Collectors.toList());
 
         List<TeamInvitation> savedInvitations = teamInvitationRepository.saveAll(invitations);
 
-        log.info("팀 생성 완료 - teamId: {}, invitationCount: {}", savedTeam.getId(), savedInvitations.size());
+        log.debug("팀 생성 완료 - teamId: {}, invitationCount: {}", savedTeam.getId(),
+                        savedInvitations.size());
 
         // 7. 응답 생성
-        return TeamResponseDto.CreateTeamResponse.builder()
-                        .teamId(savedTeam.getId())
-                        .title(savedTeam.getTitle())
-                        .description(savedTeam.getDescription())
+        return TeamResponseDto.CreateTeamResponse.builder().teamId(savedTeam.getId())
+                        .title(savedTeam.getTitle()).description(savedTeam.getDescription())
                         .teamSize(savedTeam.getTeamSize())
                         .preferredMood(savedTeam.getPreferredMood())
                         .preferredAgeMin(savedTeam.getPreferredAgeMin().intValue())
@@ -102,73 +94,78 @@ public class TeamService {
                         .preferredEntryYearMin(savedTeam.getPreferredEntryYearMin().intValue())
                         .preferredEntryYearMax(savedTeam.getPreferredEntryYearMax().intValue())
                         .isOpen(savedTeam.getIsOpen())
-                        .sentInvitations(convertToInvitationInfos(savedInvitations))
-                        .build();
+                        .sentInvitations(convertToInvitationInfos(savedInvitations)).build();
     }
 
     /**
      * 친구 검색 (팀 초대용) - 같은 성별만 필터링
      */
-    public TeamResponseDto.SearchFriendsResponse searchFriends(Long memberId, TeamRequestDto.SearchFriendsRequest request) {
-        log.info("친구 검색 요청 - memberId: {}, keyword: {}", memberId, request.keyword());
+    public TeamResponseDto.SearchFriendsResponse searchFriends(Long memberId,
+                    TeamRequestDto.SearchFriendsRequest request) {
+        log.debug("친구 검색 요청 - memberId: {}, keyword: {}", memberId, request.keyword());
 
         Member member = memberRepository.findById(memberId)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
         List<Friend> friends;
         if (request.keyword() == null || request.keyword().trim().isEmpty()) {
             friends = friendRepository.findFriendsByMember(member);
         } else {
-            friends = friendRepository.findFriendsByMemberAndKeyword(member, request.keyword().trim());
+            friends = friendRepository.findFriendsByMemberAndKeyword(member,
+                            request.keyword().trim());
         }
 
-        // ✅ 수정: 같은 성별만 필터링
-        List<TeamResponseDto.SearchableFriend> searchableFriends = friends.stream()
-                        .map(friend -> friend.getOtherMember(member))
-                        .filter(friendMember -> friendMember.getGender() == member.getGender()) // 같은 성별 필터링
-                        .map(friendMember -> TeamResponseDto.SearchableFriend.builder()
-                                        .memberId(friendMember.getId())
-                                        .nickname(friendMember.getNickname())
-                                        .universityEmail(friendMember.getFullUniversityEmail())
-                                        .bio(friendMember.getBio())
-                                        .age(friendMember.getAge())
-                                        .genderDisplayName(friendMember.getGender().getDescription())
-                                        .universityName(friendMember.getUniversity().getName())
-                                        .collegeName(friendMember.getCollege() != null ? friendMember.getCollege().getName() : null)
-                                        .personalityTypes(friendMember.getPersonalityCodes())
-                                        .build())
-                        .toList();
+        // 수정: 같은 성별만 필터링
+        List<TeamResponseDto.SearchableFriend> searchableFriends =
+                        friends.stream().map(friend -> friend.getOtherMember(member))
+                                        .filter(friendMember -> friendMember.getGender() == member.getGender()) // 같은 성별 필터링
+                                        .map(friendMember -> TeamResponseDto.SearchableFriend.builder()
+                                                        .memberId(friendMember.getId())
+                                                        .nickname(friendMember.getNickname())
+                                                        .universityEmail(
+                                                                        friendMember.getFullUniversityEmail())
+                                                        .bio(friendMember.getBio())
+                                                        .age(friendMember.getAge())
+                                                        .genderDisplayName(friendMember.getGender()
+                                                                        .getDescription())
+                                                        .universityName(friendMember.getUniversity()
+                                                                        .getName())
+                                                        .collegeName(friendMember.getCollege() != null ?
+                                                                        friendMember.getCollege()
+                                                                                        .getName() :
+                                                                        null).personalityTypes(
+                                                                        friendMember.getPersonalityCodes())
+                                                        .build()).toList();
 
-        return TeamResponseDto.SearchFriendsResponse.builder()
-                        .friends(searchableFriends)
-                        .totalCount(searchableFriends.size())
-                        .build();
+        return TeamResponseDto.SearchFriendsResponse.builder().friends(searchableFriends)
+                        .totalCount(searchableFriends.size()).build();
     }
 
     /**
-     * 초대 응답 (수락/거절) - 완전 수정 버전
+     * 초대 응답 (수락/거절)
      */
     @Transactional
-    public TeamResponseDto.RespondToInvitationResponse respondToInvitation(
-                    Long memberId, Long invitationId, TeamRequestDto.RespondToInvitationRequest request) {
+    public TeamResponseDto.RespondToInvitationResponse respondToInvitation(Long memberId,
+                    Long invitationId, TeamRequestDto.RespondToInvitationRequest request) {
 
-        log.info("초대 응답 - memberId: {}, invitationId: {}, accept: {}",
-                        memberId, invitationId, request.accept());
+        log.debug("초대 응답 - memberId: {}, invitationId: {}, accept: {}", memberId, invitationId,
+                        request.accept());
 
         Member member = memberRepository.findById(memberId)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
-        TeamInvitation invitation = teamInvitationRepository
-                        .findByIdAndInvitee(invitationId, member)
-                        .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_INVITATION_NOT_FOUND));
+        TeamInvitation invitation =
+                        teamInvitationRepository.findByIdAndInvitee(invitationId, member)
+                                        .orElseThrow(() -> new BaseException(
+                                                        BaseResponseStatus.TEAM_INVITATION_NOT_FOUND));
 
         // 만료 확인 및 처리
         invitation.expireIfNeeded();
 
         if (!invitation.canBeProcessed()) {
-            throw new BaseException(invitation.isExpired()
-                            ? BaseResponseStatus.TEAM_INVITATION_EXPIRED
-                            : BaseResponseStatus.TEAM_INVITATION_NOT_PENDING);
+            throw new BaseException(invitation.isExpired() ?
+                            BaseResponseStatus.TEAM_INVITATION_EXPIRED :
+                            BaseResponseStatus.TEAM_INVITATION_NOT_PENDING);
         }
 
         String responseMessage;
@@ -177,7 +174,7 @@ public class TeamService {
             invitation.accept();
             teamInvitationRepository.save(invitation);
 
-            // ✅ TeamMemberRepository를 통한 안전한 저장
+            // TeamMemberRepository를 통한 안전한 저장
             Team team = invitation.getTeam();
 
             // 이미 팀 멤버인지 확인 (중복 방지)
@@ -198,18 +195,16 @@ public class TeamService {
             responseMessage = "팀 초대를 거절했습니다.";
         }
 
-        log.info("초대 응답 완료 - invitationId: {}, status: {}",
-                        invitation.getId(), invitation.getStatus());
+        log.debug("초대 응답 완료 - invitationId: {}, status: {}", invitation.getId(),
+                        invitation.getStatus());
 
         return TeamResponseDto.RespondToInvitationResponse.builder()
-                        .invitationId(invitation.getId())
-                        .status(invitation.getStatus())
-                        .message(responseMessage)
-                        .build();
+                        .invitationId(invitation.getId()).status(invitation.getStatus())
+                        .message(responseMessage).build();
     }
 
     /**
-     * ✅ 새로 추가: 모든 초대가 수락되었는지 확인하고 팀을 오픈 상태로 변경
+     * 모든 초대가 수락되었는지 확인하고 팀을 오픈 상태로 변경
      */
     @Transactional
     public void checkAndOpenTeam(Team team) {
@@ -221,7 +216,7 @@ public class TeamService {
             team.activate();
             teamRepository.save(team);
 
-            log.info("팀 오픈 상태 변경 - teamId: {}, 모든 초대가 수락됨", team.getId());
+            log.debug("팀 오픈 상태 변경 - teamId: {}, 모든 초대가 수락됨", team.getId());
         }
     }
 
@@ -237,7 +232,7 @@ public class TeamService {
         // 2. 초대할 멤버들 조회
         List<Member> invitees = memberRepository.findAllById(inviteMemberIds);
         if (invitees.size() != inviteMemberIds.size()) {
-            throw new BaseException(BaseResponseStatus.NOT_FOUND);
+            throw new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND);
         }
 
         // 3. 모든 초대 대상이 친구인지 확인
@@ -260,17 +255,13 @@ public class TeamService {
     /**
      * 초대 정보 변환
      */
-    private List<TeamResponseDto.TeamInvitationInfo> convertToInvitationInfos(List<TeamInvitation> invitations) {
-        return invitations.stream()
-                        .map(invitation -> TeamResponseDto.TeamInvitationInfo.builder()
-                                        .invitationId(invitation.getId())
-                                        .inviteeId(invitation.getInvitee().getId())
-                                        .inviteeName(invitation.getInvitee().getNickname())
-                                        .inviteeNickname(invitation.getInvitee().getNickname())
-                                        .status(invitation.getStatus())
-                                        .createdAt(invitation.getCreatedAt())
-                                        .expiredAt(invitation.getExpiredAt())
-                                        .build())
-                        .collect(Collectors.toList());
+    private List<TeamResponseDto.TeamInvitationInfo> convertToInvitationInfos(
+                    List<TeamInvitation> invitations) {
+        return invitations.stream().map(invitation -> TeamResponseDto.TeamInvitationInfo.builder()
+                        .invitationId(invitation.getId()).inviteeId(invitation.getInvitee().getId())
+                        .inviteeName(invitation.getInvitee().getNickname())
+                        .inviteeNickname(invitation.getInvitee().getNickname())
+                        .status(invitation.getStatus()).createdAt(invitation.getCreatedAt())
+                        .expiredAt(invitation.getExpiredAt()).build()).collect(Collectors.toList());
     }
 }

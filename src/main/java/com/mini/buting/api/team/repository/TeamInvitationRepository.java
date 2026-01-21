@@ -18,22 +18,15 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
     /**
      * 특정 팀의 모든 초대 조회
      */
-    @Query("SELECT ti FROM TeamInvitation ti " +
-           "JOIN FETCH ti.invitee " +
-           "WHERE ti.team = :team")
+    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.invitee " + "WHERE ti.team = :team")
     List<TeamInvitation> findByTeamWithInvitee(@Param("team") Team team);
 
     /**
      * 특정 멤버가 받은 대기중인 초대들 조회
      */
-    @Query("SELECT ti FROM TeamInvitation ti " +
-           "JOIN FETCH ti.team t " +
-           "JOIN FETCH ti.inviter " +
-           "WHERE ti.invitee = :invitee " +
-           "AND ti.status = 'PENDING' " +
-           "AND ti.expiredAt > :now")
-    List<TeamInvitation> findPendingInvitationsByInvitee(@Param("invitee") Member invitee, 
-                                                         @Param("now") LocalDateTime now);
+    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team t " + "JOIN FETCH ti.inviter " + "WHERE ti.invitee = :invitee " + "AND ti.status = 'PENDING' " + "AND ti.expiredAt > :now")
+    List<TeamInvitation> findPendingInvitationsByInvitee(@Param("invitee") Member invitee,
+                    @Param("now") LocalDateTime now);
 
     /**
      * 팀과 초대받은 사람으로 초대 조회
@@ -43,34 +36,25 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
     /**
      * 초대 ID와 초대받은 사람으로 초대 조회 (권한 확인용)
      */
-    @Query("SELECT ti FROM TeamInvitation ti " +
-           "JOIN FETCH ti.team " +
-           "JOIN FETCH ti.inviter " +
-           "WHERE ti.id = :invitationId AND ti.invitee = :invitee")
-    Optional<TeamInvitation> findByIdAndInvitee(@Param("invitationId") Long invitationId, 
-                                                @Param("invitee") Member invitee);
+    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team " + "JOIN FETCH ti.inviter " + "WHERE ti.id = :invitationId AND ti.invitee = :invitee")
+    Optional<TeamInvitation> findByIdAndInvitee(@Param("invitationId") Long invitationId,
+                    @Param("invitee") Member invitee);
 
     /**
      * 특정 팀의 수락된 초대 수 조회
      */
-    @Query("SELECT COUNT(ti) FROM TeamInvitation ti " +
-           "WHERE ti.team = :team AND ti.status = 'ACCEPTED'")
+    @Query("SELECT COUNT(ti) FROM TeamInvitation ti " + "WHERE ti.team = :team AND ti.status = 'ACCEPTED'")
     long countAcceptedInvitationsByTeam(@Param("team") Team team);
 
     /**
      * 만료된 대기중 초대들 조회
      */
-    @Query("SELECT ti FROM TeamInvitation ti " +
-           "WHERE ti.status = 'PENDING' " +
-           "AND ti.expiredAt <= :now")
+    @Query("SELECT ti FROM TeamInvitation ti " + "WHERE ti.status = 'PENDING' " + "AND ti.expiredAt <= :now")
     List<TeamInvitation> findExpiredPendingInvitations(@Param("now") LocalDateTime now);
 
     /**
      * 특정 팀의 모든 초대가 수락되었는지 확인
      */
-    @Query("SELECT CASE WHEN COUNT(ti) = 0 THEN true ELSE false END " +
-           "FROM TeamInvitation ti " +
-           "WHERE ti.team = :team " +
-           "AND ti.status IN ('PENDING', 'REJECTED')")
+    @Query("SELECT CASE WHEN COUNT(ti) = 0 THEN true ELSE false END " + "FROM TeamInvitation ti " + "WHERE ti.team = :team " + "AND ti.status IN ('PENDING', 'REJECTED')")
     boolean areAllInvitationsAccepted(@Param("team") Team team);
 }

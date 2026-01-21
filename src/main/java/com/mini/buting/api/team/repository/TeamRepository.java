@@ -25,17 +25,12 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     /**
      * 팀과 해당 팀의 멤버들을 함께 조회
      */
-    @Query("SELECT t FROM Team t " +
-           "LEFT JOIN FETCH t.teamMembers tm " +
-           "LEFT JOIN FETCH tm.member " +
-           "WHERE t.id = :teamId")
+    @Query("SELECT t FROM Team t " + "LEFT JOIN FETCH t.teamMembers tm " + "LEFT JOIN FETCH tm.member " + "WHERE t.id = :teamId")
     Optional<Team> findByIdWithMembers(@Param("teamId") Long teamId);
 
     /**
      * 팀과 팀장 정보를 함께 조회
      */
-    @Query("SELECT t FROM Team t " +
-           "JOIN FETCH t.leader " +
-           "WHERE t.id = :teamId")
+    @Query("SELECT t FROM Team t " + "JOIN FETCH t.leader " + "WHERE t.id = :teamId")
     Optional<Team> findByIdWithLeader(@Param("teamId") Long teamId);
 }
