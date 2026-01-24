@@ -12,6 +12,9 @@ springdoc:
     operations-sorter: alpha
 
 spring:
+  config:
+    import:
+      - optional:application-auth.yaml
   jackson:
     time-zone: ${JSON_TIME_ZONE}
   datasource:

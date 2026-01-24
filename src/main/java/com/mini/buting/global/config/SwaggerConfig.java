@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.mini.buting.global.security.constant.SecurityConstants.GRANT_TYPE;
+import static com.mini.buting.global.security.constant.SecurityConstants.Token.GRANT_TYPE;
 
 @Configuration
 public class SwaggerConfig {
@@ -30,7 +30,7 @@ public class SwaggerConfig {
                         .type(SecurityScheme.Type.HTTP)
                         .scheme(GRANT_TYPE.trim())
                         .bearerFormat(securityJwtName)
-                        .description("헤더에 'Authorization: Bearer {ACCESS_TOKEN}' 형식으로 토큰을 입력해주세요."));
+                        .description("헤더에 'Authorization: %s{ACCESS_TOKEN}' 형식으로 토큰을 입력해주세요.".formatted(GRANT_TYPE)));
 
         return new OpenAPI()
                 .addSecurityItem(securityRequirement)

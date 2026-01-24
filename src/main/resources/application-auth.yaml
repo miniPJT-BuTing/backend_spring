@@ -1,0 +1,29 @@
+spring:
+  security:
+
+security:
+  jwt:
+    secret-key: ${SECURITY_JWT_SECRET_KEY}
+    expire-time:
+      access: ${SECURITY_JWT_EXP_ACCESS}
+      refresh: ${SECURITY_JWT_EXP_REFRESH}
+
+  whitelist:
+    GET: ${SECURITY_WHITELIST_GET:}
+    POST: ${SECURITY_WHITELIST_POST:}
+    PUT: ${SECURITY_WHITELIST_PUT:}
+    DELETE: ${SECURITY_WHITELIST_DELETE:}
+    PATCH: ${SECURITY_WHITELIST_PATCH:}
+    OPTIONS: ${SECURITY_WHITELIST_OPTIONS:}
+
+  cors:
+    allowed-origins: ${SECURITY_CORS_ALLOWED_ORIGINS}
+    allowed-methods: ${SECURITY_CORS_ALLOWED_METHODS}
+    allowed-headers: ${SECURITY_CORS_ALLOWED_HEADERS}
+    allow-credentials: ${SECURITY_CORS_ALLOW_CREDENTIALS}
+    exposed-headers: ${SECURITY_CORS_EXPOSED_HEADERS}
+    max-age: ${SECURITY_CORS_MAX_AGE:3600}
+
+  access-rules:
+    -  role: "ADMIN"
+       paths: ${SECURITY_ADMIN_PATHS}
