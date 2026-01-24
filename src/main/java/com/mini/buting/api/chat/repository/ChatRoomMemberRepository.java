@@ -29,7 +29,8 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             m.gender,
             (m.id = cr.leader.id),
             u.name,
-            c.name
+            c.name,
+            m.isDeleted
         )
         from ChatRoomMember crm
             join crm.member m
