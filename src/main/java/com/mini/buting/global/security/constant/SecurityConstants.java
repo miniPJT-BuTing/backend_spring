@@ -61,4 +61,14 @@ public final class SecurityConstants {
          */
         public static final String BLACKLIST_REFRESH_PREFIX = BLACK_PREFIX + "rt:";
     }
+
+    /**
+     * <h3>로그 관련 상수</h3>
+     */
+    public static final class Log {
+        /**
+         * 로그 관련 공통 prefix
+         */
+        public static final String LOG_PREFIX = "[SECURITY] ";
+    }
 }
