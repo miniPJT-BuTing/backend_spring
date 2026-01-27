@@ -8,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -20,7 +22,7 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_vote_room", columnList = "room_id")
         }
 )
-public class Vote extends BaseTimeEntity {
+public class Vote {
 
     @Id
     private Long id;
@@ -52,6 +54,18 @@ public class Vote extends BaseTimeEntity {
     @JoinColumn(name = "created_by", nullable = false, updatable = false)
     private Member createdBy;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "deadline", nullable = false)
+    private LocalDateTime deadline;
+
+    @PrePersist
+    void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+
     public static Vote create(Long voteId, ChatRoom room, Member creator, String messageId,
                               VoteCreateRequest request) {
         Vote v = new Vote();
@@ -64,6 +78,7 @@ public class Vote extends BaseTimeEntity {
         v.multiple = request.isMultiple();
         v.anonymous = request.isAnonymous();
         v.status = VoteStatus.OPEN;
+        v.deadline = request.deadLine();
         return v;
     }
 

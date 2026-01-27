@@ -15,14 +15,14 @@ public record VoteInfoResponse(
         boolean anonymous,
         VoteStatus status,
         List<VoteOptionResponse> options,
-        List<Integer> mySelections,
+        List<Long> mySelections,
         String nickname,
         Long creator
 ) {
 
     public static VoteInfoResponse from(Vote vote, List<VoteOption> options){
 
-        List<VoteOptionResponse> optionResponses = VoteOptionResponse.from(options);
+        List<VoteOptionResponse> optionResponses = VoteOptionResponse.fromOptions(options);
 
         return new VoteInfoResponse(
                 vote.getId().toString(),
@@ -33,6 +33,22 @@ public record VoteInfoResponse(
                 vote.getStatus(),
                 optionResponses,
                 new ArrayList<>(),
+                vote.getCreatedBy().getNickname(),
+                vote.getCreatedBy().getId()
+        );
+    }
+
+    public static VoteInfoResponse of(Vote vote, List<VoteOptionResponse> optionCounts, List<Long> mySelections) {
+
+        return new VoteInfoResponse(
+                vote.getId().toString(),
+                vote.getTitle(),
+                vote.getDescription(),
+                vote.isMultiple(),
+                vote.isAnonymous(),
+                vote.getStatus(),
+                optionCounts,
+                mySelections,
                 vote.getCreatedBy().getNickname(),
                 vote.getCreatedBy().getId()
         );

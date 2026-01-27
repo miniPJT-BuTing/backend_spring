@@ -109,7 +109,13 @@ public enum BaseResponseStatus {
     MESSAGE_LOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 5005, "메시지 조회에 실패했습니다."),
     NOT_TEAM_LEADER(HttpStatus.NOT_FOUND, false, 5006, "해당 기능의 권한이 없습니다." ),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5007, "공지사항이 존재하지 않습니다." ),
-    VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5008, "투표가 존재하지 않습니다.");
+    VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 5008, "투표가 존재하지 않습니다."),
+    CHAT_VOTE_UNMATCHED(HttpStatus.NOT_FOUND, false, 5009, "해당 채팅방에서 접근할 수 없습니다."),
+    VOTE_NOT_AVAILABLE(HttpStatus.FORBIDDEN, false, 5010, "투표가 불가능합니다."),
+    VOTE_OPTION_REQUIRED(HttpStatus.BAD_REQUEST, false, 5011, "옵션을 하나 이상 선택해야합니다."),
+    VOTE_NOT_MULTIPLE(HttpStatus.BAD_REQUEST, false, 5012, "단일 투표에서 중복 투표는 불가능합니다."),
+    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다.");
+
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;

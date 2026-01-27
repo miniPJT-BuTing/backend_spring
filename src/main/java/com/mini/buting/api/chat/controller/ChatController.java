@@ -1,6 +1,7 @@
 package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
+import com.mini.buting.api.chat.domain.chatroom.Vote;
 import com.mini.buting.api.chat.dto.request.*;
 import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.service.*;
@@ -156,9 +157,31 @@ public class ChatController {
         return BaseResponse.onSuccess(voteInfoResponse);
     }
 
-
     // 투표 조회
+    @GetMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<VoteInfoResponse> getVoteInfo(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        VoteInfoResponse voteInfoResponse = voteService.getVoteInfo(roomId, voteId, senderId);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
+
 
     // 투표 하기
+    @PostMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<VoteInfoResponse> vote(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody VoteBallotCreateRequest vote
+    ){
+        VoteInfoResponse voteInfoResponse = voteService.vote(roomId, voteId, senderId, vote);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
 
 }

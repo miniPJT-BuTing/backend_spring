@@ -1,5 +1,6 @@
 package com.mini.buting.api.chat.dto.request;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record VoteCreateRequest (
@@ -7,6 +8,7 @@ public record VoteCreateRequest (
         String description,
         List<VoteOptionRequest> options,
         boolean isMultiple,
-        boolean isAnonymous
+        boolean isAnonymous,
+        LocalDateTime deadLine
 ){
 }
