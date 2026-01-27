@@ -98,6 +98,24 @@ public enum BaseResponseStatus {
     COLLEGE_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4302, "존재하지 않는 단과대입니다."),
     INVALID_UNIVERSITY_EMAIL(HttpStatus.BAD_REQUEST, false, 4303, "올바르지 않은 대학 이메일입니다."),
 
+    /**
+     * 4400: 팀 초대 관련 에러
+     */
+    TEAM_INVITATION_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4401, "대기 중인 초대가 아닙니다."),
+    TEAM_INVITATION_EXPIRED(HttpStatus.BAD_REQUEST, false, 4402, "만료된 초대입니다."),
+    TEAM_INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4403, "초대를 찾을 수 없습니다."),
+    ALREADY_INVITED_TO_TEAM(HttpStatus.BAD_REQUEST, false, 4404, "이미 해당 팀에 초대된 상태입니다."),
+    CANNOT_INVITE_SELF(HttpStatus.BAD_REQUEST, false, 4405, "자신을 초대할 수 없습니다."),
+    NOT_FRIEND_CANNOT_INVITE(HttpStatus.BAD_REQUEST, false, 4406, "친구만 초대할 수 있습니다."),
+
+    /**
+     * 4500: 팀 시스템 관련 에러
+     */
+    TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4501, "팀을 찾을 수 없습니다."),
+    ALREADY_TEAM_LEADER(HttpStatus.BAD_REQUEST, false, 4502, "이미 다른 팀의 팀장입니다."),
+    TEAM_SIZE_MISMATCH(HttpStatus.BAD_REQUEST, false, 4503, "초대할 멤버 수가 팀 크기와 일치하지 않습니다."),
+    DIFFERENT_GENDER_CANNOT_INVITE(HttpStatus.BAD_REQUEST, false, 4504, "다른 성별의 사용자는 초대할 수 없습니다."),
+    TEAM_NOT_READY(HttpStatus.BAD_REQUEST, false, 4505, "모든 멤버가 수락해야 팀이 활성화됩니다."),
 
     /**
      * 5000: 채팅방 관련 에러
