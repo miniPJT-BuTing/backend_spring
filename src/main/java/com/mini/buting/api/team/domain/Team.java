@@ -70,11 +70,11 @@ public class Team extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Gender gender;
+    private com.mini.buting.api.team.domain.Gender gender;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_mood", nullable = false)
-    private PreferredMood preferredMood;
+    private TeamMood preferredMood;
 
     @Column(nullable = false)
     private String description;
@@ -100,8 +100,8 @@ public class Team extends BaseTimeEntity {
     @Builder
     public Team(String title, Byte preferredAgeMin, Byte preferredAgeMax,
                     Byte preferredEntryYearMin, Byte preferredEntryYearMax, TeamSize teamSize,
-                    Gender gender, PreferredMood preferredMood, String description, Boolean isOpen,
-                    Member leader) {
+                    com.mini.buting.api.team.domain.Gender gender, TeamMood preferredMood,
+                    String description, Boolean isOpen, Member leader) {
         this.title = title;
         this.preferredAgeMin = preferredAgeMin;
         this.preferredAgeMax = preferredAgeMax;
@@ -122,6 +122,10 @@ public class Team extends BaseTimeEntity {
 
     public void updateDescription(String description) {
         this.description = description;
+    }
+
+    public void activate() {
+        this.isOpen = true;
     }
 
     public int getCurrentMemberCount() {
@@ -155,43 +159,5 @@ public class Team extends BaseTimeEntity {
 
     public boolean isMember(Member member) {
         return teamMembers.stream().anyMatch(tm -> tm.getMember().equals(member));
-    }
-
-    // Enum 정의
-    @Getter
-    public enum TeamSize {
-        TWO_ON_TWO("2:2", 2), THREE_ON_THREE("3:3", 3), FOUR_ON_FOUR("4:4", 4), FIVE_ON_FIVE("5:5",
-                        5), SIX_ON_SIX("6:6", 6);
-
-        private final String displayName;
-        private final int size;
-
-        TeamSize(String displayName, int size) {
-            this.displayName = displayName;
-            this.size = size;
-        }
-    }
-
-
-    public enum Gender {
-        MALE, FEMALE
-    }
-
-
-    public enum PreferredMood {
-        ROMANTIC_TENSION("연애 텐션"), FRIENDSHIP_TENSION("친구 텐션"), FLIRTY_TENSION(
-                        "썸 텐션"), CALM_TENSION("차분 텐션"), HIGH_TENSION("하이 텐션"), DRINKING_TENSION(
-                        "술 텐션"), EMOTIONAL_TENSION("감성 텐션"), ANY_MOOD("어떤 분위기든 상관없음");
-
-        private final String description;
-
-        PreferredMood(String description) {
-            this.description = description;
-        }
-
-        // 화면에 표시할 한글명 반환
-        public String getDisplayName() {
-            return this.description;
-        }
     }
 }
