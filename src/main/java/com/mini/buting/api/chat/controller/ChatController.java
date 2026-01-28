@@ -1,7 +1,6 @@
 package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
-import com.mini.buting.api.chat.domain.chatroom.Vote;
 import com.mini.buting.api.chat.dto.request.*;
 import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.service.*;
@@ -172,7 +171,7 @@ public class ChatController {
 
 
     // 투표 하기
-    @PostMapping("/{roomId}/vote/{voteId}")
+    @PutMapping("/{roomId}/vote/{voteId}")
     public BaseResponse<VoteInfoResponse> vote(
             @PathVariable String roomId,
             @PathVariable String voteId,

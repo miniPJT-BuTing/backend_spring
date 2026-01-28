@@ -1,7 +1,6 @@
 package com.mini.buting.api.chat.service;
 
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
-import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.ChatRoomListUpdateEvent;
 import com.mini.buting.api.chat.dto.response.RoomMemberReadProjection;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,6 @@ package com.mini.buting.api.chat.service;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.domain.payload.NoticePayload;
 import com.mini.buting.api.chat.domain.payload.TextPayload;
-import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.response.NoticeAction;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;

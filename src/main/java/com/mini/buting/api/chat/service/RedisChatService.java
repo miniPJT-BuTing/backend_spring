@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.buting.api.chat.domain.chatmessage.CachedChatMessage;
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.dto.response.ChatMessageResponse;
-import com.mini.buting.global.exception.BaseException;
-import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
