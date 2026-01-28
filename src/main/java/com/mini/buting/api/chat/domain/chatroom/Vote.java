@@ -19,7 +19,8 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(name = "uk_vote_message", columnNames = {"message_id"})
         },
         indexes = {
-                @Index(name = "idx_vote_room", columnList = "room_id")
+                @Index(name = "idx_vote_room", columnList = "room_id"),
+                @Index(name = "idx_vote_status_deadline", columnList = "status, deadline")
         }
 )
 public class Vote {

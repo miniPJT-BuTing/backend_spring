@@ -43,4 +43,7 @@ public interface VoteBallotRepository extends JpaRepository<VoteBallot, Long> {
     List<VoteOptionVoterProjection> findVotersByVoteId(
             @Param("voteId") Long voteId
     );
+    @Modifying
+    @Query("delete from VoteBallot vb where vb.id.voteId = :voteId")
+    void deleteByVoteId(@Param("voteId") Long voteId);
 }

@@ -6,6 +6,7 @@ import com.mini.buting.api.chat.dto.request.VoteOptionRequest;
 import com.mini.buting.api.chat.dto.response.VoteOptionCountProjection;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -36,4 +37,8 @@ public interface VoteOptionRepository extends JpaRepository<VoteOption, Long> {
     List<VoteOptionCountProjection> findOptionCounts(
             @Param("voteId") Long voteId
     );
+
+    @Modifying
+    @Query("delete from VoteOption vo where vo.vote.id = :voteId")
+    void deleteByVoteId(@Param("voteId") Long voteId);
 }

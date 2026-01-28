@@ -2,6 +2,7 @@ package com.mini.buting.api.chat.service;
 
 import com.mini.buting.api.chat.domain.MessageType;
 import com.mini.buting.api.chat.domain.chatroom.*;
+import com.mini.buting.api.chat.domain.payload.VoteAction;
 import com.mini.buting.api.chat.domain.payload.VotePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.request.VoteBallotCreateRequest;
@@ -19,9 +20,11 @@ import com.mini.buting.global.response.BaseResponseStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,7 +68,7 @@ public class VoteService {
         String messageId;
         try {
             messageId = chatService.sendMessage(
-                    createVoteMessage(request, roomIdStr, vote.getId()),
+                    createVoteMessage(request, roomIdStr, vote.getId().toString()),
                     senderId
             );
         } catch (Exception e) {
@@ -96,13 +99,16 @@ public class VoteService {
         voteOptionRepository.saveAll(rows);
     }
 
-    private ChatMessageRequest createVoteMessage(VoteCreateRequest request, String roomIdStr, Long voteId){
+    private ChatMessageRequest createVoteMessage(VoteCreateRequest request, String roomIdStr, String voteId){
         return new ChatMessageRequest(
                 roomIdStr,
                 MessageType.VOTE,
                 new VotePayload(
+                        VoteAction.CREATED,
                         voteId,
-                        request.title()
+                        request.title(),
+                        request.options().stream().map(VoteOptionRequest::text).toList(),
+                        null
                 )
         );
     }
@@ -115,7 +121,7 @@ public class VoteService {
 
         Vote vote = getVote(roomId, voteId, senderId);
 
-        if(!vote.getStatus().equals(VoteStatus.OPEN)){
+        if(!vote.getStatus().equals(VoteStatus.OPEN) || vote.getDeadline().isBefore(LocalDateTime.now())){
             throw new BaseException(BaseResponseStatus.VOTE_NOT_AVAILABLE);
         }
 
@@ -156,6 +162,10 @@ public class VoteService {
         if(!vote.getChatRoom().getRoomId().equals(roomId))
             throw new BaseException(BaseResponseStatus.CHAT_VOTE_UNMATCHED);
 
+        if(vote.getDeadline().isBefore(LocalDateTime.now())){
+            vote.close();
+        }
+
         return vote;
     }
 
@@ -165,7 +175,6 @@ public class VoteService {
 
         Vote vote = getVote(roomId, voteId, senderId);
 
-        // 3) 옵션별 투표 수
         List<VoteOptionCountProjection> optionCounts =
                 voteOptionRepository.findOptionCounts(voteId);
 
@@ -186,7 +195,6 @@ public class VoteService {
             votersByOption.putAll(temp);
         }
 
-        // 4) 내 선택
         List<Long> mySelections =
                 voteBallotRepository.findOptionIdsByVoteAndMember(voteId, senderId);
 
@@ -203,9 +211,99 @@ public class VoteService {
                         ))
                         .toList();
 
-        // 5) 응답 조립
         return VoteInfoResponse.of(vote, options, mySelections);
 
+    }
+
+    @Transactional
+    public void deleteVote(String roomIdStr, String voteIdStr, Long senderId) {
+        Long roomId = Long.parseLong(roomIdStr);
+        Long voteId = Long.parseLong(voteIdStr);
+
+        Vote vote = getVote(roomId, voteId, senderId);
+
+        voteBallotRepository.deleteByVoteId(voteId);
+        voteOptionRepository.deleteByVoteId(voteId);
+        voteRepository.delete(vote);
+
+        ChatMessageRequest message = deleteVoteMessage(vote.getTitle(), roomIdStr, voteIdStr);
+
+        chatService.sendMessage(
+                message,
+                vote.getCreatedBy().getId());
+    }
+
+    @Scheduled(fixedDelay = 60000)
+    public void closeExpiredVotesAndNotify() {
+
+        List<VoteCloseEvent> events = transactionTemplate.execute(status -> {
+            List<Vote> expired = voteRepository.findExpiredVotes(LocalDateTime.now());
+            List<VoteCloseEvent> result = new ArrayList<>();
+
+            for (Vote vote : expired) {
+                List<String> winner = calculateWinner(vote.getId());
+                vote.close();
+                result.add(new VoteCloseEvent(vote, winner));
+            }
+            return result;
+        });
+
+        for (VoteCloseEvent e : events) {
+            ChatMessageRequest message = closeVoteMessage(e.vote().getTitle(), e.vote().getChatRoom().getRoomId().toString(), e.vote().getId().toString(), e.winners());
+
+            chatService.sendMessage(
+                    message,
+                    e.vote().getCreatedBy().getId()
+            );
+        }
+    }
+
+    public List<String> calculateWinner(Long voteId) {
+
+        List<VoteOptionCountProjection> counts =
+                voteOptionRepository.findOptionCounts(voteId);
+
+        if (counts.isEmpty()) {
+            return List.of();
+        }
+
+        int maxCount = counts.stream()
+                .mapToInt(VoteOptionCountProjection::getCount)
+                .max()
+                .orElse(0);
+
+        return counts.stream()
+                .filter(p -> p.getCount() == maxCount)
+                .map(VoteOptionCountProjection::getText)
+                .toList();
+    }
+
+    private ChatMessageRequest deleteVoteMessage(String title, String roomIdStr, String voteId){
+        return new ChatMessageRequest(
+                roomIdStr,
+                MessageType.VOTE,
+                new VotePayload(
+                        VoteAction.DELETED,
+                        voteId,
+                        title,
+                        null,
+                        null
+                )
+        );
+    }
+
+    private ChatMessageRequest closeVoteMessage(String title, String roomIdStr, String voteId, List<String> result){
+        return new ChatMessageRequest(
+                roomIdStr,
+                MessageType.VOTE,
+                new VotePayload(
+                        VoteAction.CLOSED,
+                        voteId,
+                        title,
+                        null,
+                        result
+                )
+        );
     }
 
 }

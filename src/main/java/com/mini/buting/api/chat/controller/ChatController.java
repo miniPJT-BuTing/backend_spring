@@ -183,4 +183,17 @@ public class ChatController {
         return BaseResponse.onSuccess(voteInfoResponse);
     }
 
+    // 투표 삭제
+    @DeleteMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<Void> deleteVote(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId
+    ){
+        voteService.deleteVote(roomId, voteId, senderId);
+
+        return BaseResponse.onSuccess();
+    }
+
+
 }
