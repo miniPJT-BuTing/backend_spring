@@ -197,21 +197,23 @@ public class MatchRequestService {
         if ("sent".equalsIgnoreCase(type)) {
             // 보낸 요청 목록
             requests = parsedStatus == null ?
-                    matchRequestRepository.findByRequestTeamOrderByCreatedAtDesc(leaderTeam) :
-                    matchRequestRepository.findByRequestTeamAndStatusOrderByCreatedAtDesc(
+                    matchRequestRepository.findByRequestTeamWithTeamsOrderByCreatedAtDesc(
+                            leaderTeam) :
+                    matchRequestRepository.findByRequestTeamAndStatusWithTeamsOrderByCreatedAtDesc(
                             leaderTeam, parsedStatus);
         } else if ("received".equalsIgnoreCase(type)) {
             // 받은 요청 목록
             requests = parsedStatus == null ?
-                    matchRequestRepository.findByTargetTeamOrderByCreatedAtDesc(leaderTeam) :
-                    matchRequestRepository.findByTargetTeamAndStatusOrderByCreatedAtDesc(
+                    matchRequestRepository.findByTargetTeamWithTeamsOrderByCreatedAtDesc(
+                            leaderTeam) :
+                    matchRequestRepository.findByTargetTeamAndStatusWithTeamsOrderByCreatedAtDesc(
                             leaderTeam, parsedStatus);
         } else {
             throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
         }
 
         List<MatchRequestResponseDto.MatchRequestSummary> summaries = requests.stream()
-                .map(this::toSummary)
+                .map(matchRequest -> toSummary(matchRequest, type))
                 .toList();
 
         return MatchRequestResponseDto.MatchRequestListResponse.builder()
@@ -220,13 +222,22 @@ public class MatchRequestService {
                 .build();
     }
 
-    private MatchRequestResponseDto.MatchRequestSummary toSummary(MatchRequest matchRequest) {
+    private MatchRequestResponseDto.MatchRequestSummary toSummary(
+            MatchRequest matchRequest,
+            String type
+    ) {
+        Team opponentTeam = "received".equalsIgnoreCase(type)
+                ? matchRequest.getRequestTeam()
+                : matchRequest.getTargetTeam();
         return MatchRequestResponseDto.MatchRequestSummary.builder()
                 .matchRequestId(matchRequest.getId())
                 .status(matchRequest.getStatus().name())
-                .requestTeam(toTeamSummary(matchRequest.getRequestTeam()))
-                .targetTeam(toTeamSummary(matchRequest.getTargetTeam()))
-                .createdAt(matchRequest.getCreatedAt())
+                .requestedAtAgo(formatTimeAgo(matchRequest.getCreatedAt()))
+                .opponentTeamTitle(opponentTeam.getTitle())
+                .opponentTeamSize(opponentTeam.getTeamSize())
+                .opponentPreferredMood(opponentTeam.getPreferredMood().getDisplayName())
+                .opponentPreferredEntryYearMin(opponentTeam.getPreferredEntryYearMin().intValue())
+                .opponentPreferredEntryYearMax(opponentTeam.getPreferredEntryYearMax().intValue())
                 .build();
     }
 
@@ -259,6 +270,21 @@ public class MatchRequestService {
         // 활성 회원 조회
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+    }
+
+    private String formatTimeAgo(java.time.LocalDateTime createdAt) {
+        java.time.Duration duration = java.time.Duration.between(createdAt,
+                java.time.LocalDateTime.now());
+        long minutes = duration.toMinutes();
+        if (minutes < 60) {
+            return minutes + "분 전";
+        }
+        long hours = duration.toHours();
+        if (hours < 24) {
+            return hours + "시간 전";
+        }
+        long days = duration.toDays();
+        return days + "일 전";
     }
 
     private void validateTeamReady(Team team) {

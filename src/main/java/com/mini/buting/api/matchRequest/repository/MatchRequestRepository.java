@@ -30,27 +30,53 @@ public interface MatchRequestRepository extends JpaRepository<MatchRequest, Long
     /**
      * 요청 팀 기준 목록 조회 (최신순)
      */
-    List<MatchRequest> findByRequestTeamOrderByCreatedAtDesc(Team requestTeam);
+    @Query("SELECT mr FROM MatchRequest mr " +
+            "JOIN FETCH mr.requestTeam " +
+            "JOIN FETCH mr.targetTeam " +
+            "WHERE mr.requestTeam = :requestTeam " +
+            "ORDER BY mr.createdAt DESC")
+    List<MatchRequest> findByRequestTeamWithTeamsOrderByCreatedAtDesc(
+            @Param("requestTeam") Team requestTeam
+    );
 
     /**
      * 대상 팀 기준 목록 조회 (최신순)
      */
-    List<MatchRequest> findByTargetTeamOrderByCreatedAtDesc(Team targetTeam);
+    @Query("SELECT mr FROM MatchRequest mr " +
+            "JOIN FETCH mr.requestTeam " +
+            "JOIN FETCH mr.targetTeam " +
+            "WHERE mr.targetTeam = :targetTeam " +
+            "ORDER BY mr.createdAt DESC")
+    List<MatchRequest> findByTargetTeamWithTeamsOrderByCreatedAtDesc(
+            @Param("targetTeam") Team targetTeam
+    );
 
     /**
      * 요청 팀 + 상태 기준 목록 조회 (최신순)
      */
-    List<MatchRequest> findByRequestTeamAndStatusOrderByCreatedAtDesc(
-            Team requestTeam,
-            MatchRequestStatus status
+    @Query("SELECT mr FROM MatchRequest mr " +
+            "JOIN FETCH mr.requestTeam " +
+            "JOIN FETCH mr.targetTeam " +
+            "WHERE mr.requestTeam = :requestTeam " +
+            "AND mr.status = :status " +
+            "ORDER BY mr.createdAt DESC")
+    List<MatchRequest> findByRequestTeamAndStatusWithTeamsOrderByCreatedAtDesc(
+            @Param("requestTeam") Team requestTeam,
+            @Param("status") MatchRequestStatus status
     );
 
     /**
      * 대상 팀 + 상태 기준 목록 조회 (최신순)
      */
-    List<MatchRequest> findByTargetTeamAndStatusOrderByCreatedAtDesc(
-            Team targetTeam,
-            MatchRequestStatus status
+    @Query("SELECT mr FROM MatchRequest mr " +
+            "JOIN FETCH mr.requestTeam " +
+            "JOIN FETCH mr.targetTeam " +
+            "WHERE mr.targetTeam = :targetTeam " +
+            "AND mr.status = :status " +
+            "ORDER BY mr.createdAt DESC")
+    List<MatchRequest> findByTargetTeamAndStatusWithTeamsOrderByCreatedAtDesc(
+            @Param("targetTeam") Team targetTeam,
+            @Param("status") MatchRequestStatus status
     );
 
     /**

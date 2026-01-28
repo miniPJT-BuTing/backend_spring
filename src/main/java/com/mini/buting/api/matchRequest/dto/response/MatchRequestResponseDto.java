@@ -49,10 +49,12 @@ public class MatchRequestResponseDto {
     public record MatchRequestSummary(
             Long matchRequestId,
             String status,
-            TeamSummary requestTeam,
-            TeamSummary targetTeam,
-            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-            LocalDateTime createdAt
+            String requestedAtAgo,
+            String opponentTeamTitle,
+            TeamSize opponentTeamSize,
+            String opponentPreferredMood,
+            Integer opponentPreferredEntryYearMin,
+            Integer opponentPreferredEntryYearMax
     ) {
     }
 
