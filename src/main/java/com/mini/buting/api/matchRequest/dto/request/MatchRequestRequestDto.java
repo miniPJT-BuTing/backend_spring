@@ -6,16 +6,11 @@ import lombok.Builder;
 public class MatchRequestRequestDto {
 
     @Builder
-    public record CreateMatchRequest(
-            @NotNull(message = "대상 팀 ID는 필수입니다.")
-            Long targetTeamId
-    ) {
+    public record CreateMatchRequest(@NotNull(message = "대상 팀 ID는 필수입니다.") Long targetTeamId) {
     }
 
+
     @Builder
-    public record RespondMatchRequest(
-            @NotNull(message = "응답은 필수입니다.")
-            Boolean accept
-    ) {
+    public record RespondMatchRequest(@NotNull(message = "응답은 필수입니다.") Boolean accept) {
     }
 }

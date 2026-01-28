@@ -26,57 +26,56 @@ public class MatchRequestController {
     @Operation(summary = "매칭 요청 생성", description = "대상 팀에게 매칭 요청을 보냅니다.")
     @PostMapping
     public ResponseEntity<BaseResponse<MatchRequestResponseDto.MatchRequestCreateResponse>> createMatchRequest(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long memberId,
-            @Valid @RequestBody MatchRequestRequestDto.CreateMatchRequest request
-    ) {
+                    @Parameter(description = "사용자 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long memberId,
+                    @Valid @RequestBody MatchRequestRequestDto.CreateMatchRequest request) {
         log.debug("매칭 요청 생성 - memberId: {}, targetTeamId: {}", memberId, request.targetTeamId());
         MatchRequestResponseDto.MatchRequestCreateResponse response =
-                matchRequestService.createMatchRequest(memberId, request);
+                        matchRequestService.createMatchRequest(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "매칭 요청 응답", description = "매칭 요청을 수락하거나 거절합니다.")
     @PatchMapping("/{matchRequestId}/respond")
     public ResponseEntity<BaseResponse<MatchRequestResponseDto.MatchRequestRespondResponse>> respondMatchRequest(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long memberId,
-            @Parameter(description = "매칭 요청 ID", required = true)
-            @PathVariable Long matchRequestId,
-            @Valid @RequestBody MatchRequestRequestDto.RespondMatchRequest request
-    ) {
-        log.debug("매칭 요청 응답 - memberId: {}, matchRequestId: {}, accept: {}",
-                memberId, matchRequestId, request.accept());
+                    @Parameter(description = "사용자 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long memberId,
+                    @Parameter(description = "매칭 요청 ID", required = true) @PathVariable
+                    Long matchRequestId,
+                    @Valid @RequestBody MatchRequestRequestDto.RespondMatchRequest request) {
+        log.debug("매칭 요청 응답 - memberId: {}, matchRequestId: {}, accept: {}", memberId,
+                        matchRequestId, request.accept());
         MatchRequestResponseDto.MatchRequestRespondResponse response =
-                matchRequestService.respondMatchRequest(memberId, matchRequestId, request);
+                        matchRequestService.respondMatchRequest(memberId, matchRequestId, request);
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "매칭 요청 단건 조회", description = "매칭 요청 상세 정보를 조회합니다.")
     @GetMapping("/{matchRequestId}")
     public ResponseEntity<BaseResponse<MatchRequestResponseDto.MatchRequestDetailResponse>> getMatchRequest(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long memberId,
-            @Parameter(description = "매칭 요청 ID", required = true)
-            @PathVariable Long matchRequestId
-    ) {
+                    @Parameter(description = "사용자 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long memberId,
+                    @Parameter(description = "매칭 요청 ID", required = true) @PathVariable
+                    Long matchRequestId) {
         MatchRequestResponseDto.MatchRequestDetailResponse response =
-                matchRequestService.getMatchRequest(memberId, matchRequestId);
+                        matchRequestService.getMatchRequest(memberId, matchRequestId);
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 
     @Operation(summary = "매칭 요청 목록 조회", description = "보낸/받은 매칭 요청 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<BaseResponse<MatchRequestResponseDto.MatchRequestListResponse>> getMatchRequests(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long memberId,
-            @Parameter(description = "sent | received", required = true)
-            @RequestParam String type,
-            @Parameter(description = "PENDING | ACCEPTED | REJECTED")
-            @RequestParam(required = false) String status
-    ) {
+                    @Parameter(description = "사용자 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long memberId,
+                    @Parameter(description = "sent | received", required = true) @RequestParam
+                    String type, @Parameter(description = "PENDING | ACCEPTED | REJECTED")
+                    @RequestParam(required = false) String status) {
         MatchRequestResponseDto.MatchRequestListResponse response =
-                matchRequestService.getMatchRequests(memberId, type, status);
+                        matchRequestService.getMatchRequests(memberId, type, status);
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
     }
 }
