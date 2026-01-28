@@ -25,7 +25,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     @Query("""
             select v
             from Vote v
-            where v.status = com.xxx.VoteStatus.OPEN
+            where v.status = com.mini.buting.api.chat.domain.chatroom.VoteStatus.OPEN
               and v.deadline is not null
               and v.deadline <= :now
         """)
