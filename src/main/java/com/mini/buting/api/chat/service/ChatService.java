@@ -2,6 +2,7 @@ package com.mini.buting.api.chat.service;
 
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
 import com.mini.buting.api.chat.domain.payload.TextPayload;
+import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
@@ -87,6 +88,12 @@ public class ChatService {
             case NOTICE:
                 return "공지가 등록되었습니다.";
 
+            case WELCOME:
+                WelcomePayload welcomePayload = (WelcomePayload) message.payload();
+                String welcomeText = welcomePayload.text();
+                return welcomeText.length() <= 15 ? welcomeText : welcomeText.substring(0, 15);
+
+            case TEXT:
             default:
                 TextPayload payload = (TextPayload) message.payload();
                 String text = payload.text();
