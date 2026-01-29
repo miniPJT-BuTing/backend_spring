@@ -101,7 +101,7 @@ public class ChatRoomService {
 
     // 채팅방 생성 시 멤버랑 연결
     public void createMembers(ChatRoom chatRoom, List<Member> participants) {
-        // 중복 방지(이미 만들어진 경우)도 하고 싶으면 exists 체크
+
         List<ChatRoomMember> rows = participants.stream()
                 .map(m -> ChatRoomMember.builder()
                         .chatRoom(chatRoom)
