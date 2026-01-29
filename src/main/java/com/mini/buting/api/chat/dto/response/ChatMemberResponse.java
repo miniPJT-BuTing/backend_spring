@@ -8,6 +8,7 @@ public record ChatMemberResponse(
         Gender gender,
         Boolean isLeader,
         String universityName,
-        String collegeName
+        String collegeName,
+        Boolean isDeleted
 ) {
 }

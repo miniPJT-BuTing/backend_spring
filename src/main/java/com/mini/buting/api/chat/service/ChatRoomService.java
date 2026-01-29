@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -102,7 +101,7 @@ public class ChatRoomService {
 
     // 채팅방 생성 시 멤버랑 연결
     public void createMembers(ChatRoom chatRoom, List<Member> participants) {
-        // 중복 방지(이미 만들어진 경우)도 하고 싶으면 exists 체크
+
         List<ChatRoomMember> rows = participants.stream()
                 .map(m -> ChatRoomMember.builder()
                         .chatRoom(chatRoom)
@@ -198,7 +197,7 @@ public class ChatRoomService {
 
     }
 
-    private void checkAuth(Long senderId, Long roomId) {
+    public void checkAuth(Long senderId, Long roomId) {
         // 1) 채팅방 존재
         if (!chatRoomRepository.existsById(roomId)) {
             throw new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS);
@@ -239,14 +238,19 @@ public class ChatRoomService {
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
-        if (!chatRoom.getLeader().getId().equals(senderId)) {
-            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
-        }
+
+        isLeader(senderId, chatRoom);
 
         chatRoom.setTitle(request);
 
         chatRoomListService.notifyRoomUpdated(roomId);
 
         return new ChatRoomUpdateResponse(roomIdStr, request.title());
+    }
+
+    public void isLeader(Long senderId, ChatRoom chatRoom) {
+        if (!chatRoom.getLeader().getId().equals(senderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
+        }
     }
 }

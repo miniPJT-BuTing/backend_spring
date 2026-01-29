@@ -1,9 +1,10 @@
 package com.mini.buting.api.chat.service;
 
 import com.mini.buting.api.chat.domain.chatmessage.ChatMessageDocument;
+import com.mini.buting.api.chat.domain.payload.NoticePayload;
 import com.mini.buting.api.chat.domain.payload.TextPayload;
-import com.mini.buting.api.chat.domain.payload.WelcomePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
+import com.mini.buting.api.chat.dto.response.NoticeAction;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
 import com.mini.buting.global.exception.BaseException;
@@ -27,7 +28,7 @@ public class ChatService {
 
     // 메시지 전송
     @Transactional
-    public void sendMessage(ChatMessageRequest message, Long senderId) {
+    public String sendMessage(ChatMessageRequest message, Long senderId) {
 
         Long roomId = Long.parseLong(message.roomId());
 
@@ -75,6 +76,7 @@ public class ChatService {
         // 채팅방 목록용 이벤트
         chatRoomListService.notifyRoomUpdated(roomId);
 
+        return messageDocument.getId();
     }
 
     private String makePreview(ChatMessageRequest message) {
@@ -86,19 +88,24 @@ public class ChatService {
                 return "사진을 보냈습니다.";
 
             case NOTICE:
-                return "공지가 등록되었습니다.";
-
+                if(message.payload() instanceof NoticePayload){
+                    if (((NoticePayload) message.payload()).action().equals(NoticeAction.CREATED))
+                        return "공지가 등록되었습니다.";
+                    else return "공지가 수정되었습니다.";
+                }
+                else{
+                    throw new BaseException(BaseResponseStatus.MESSAGE_PUBLISH_FAILED);
+                }
             case WELCOME:
-                WelcomePayload welcomePayload = (WelcomePayload) message.payload();
-                String welcomeText = welcomePayload.text();
-                return welcomeText.length() <= 15 ? welcomeText : welcomeText.substring(0, 15);
-
-            case TEXT:
+                return "매칭에 성공했어요! 대화를 나눠보세요";
             default:
-                TextPayload payload = (TextPayload) message.payload();
-                String text = payload.text();
-                return text.length() <= 15 ? text : text.substring(0, 15);
+                if(message.payload() instanceof TextPayload){
+                    TextPayload payload = (TextPayload) message.payload();
+                    String text = payload.text();
+                    return text.length() <= 20 ? text : text.substring(0, 20);
+                }
         }
+        return null;
     }
 
 }

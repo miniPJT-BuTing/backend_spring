@@ -1,17 +1,9 @@
 package com.mini.buting.api.chat.controller;
 
 import com.mini.buting.api.chat.domain.chatroom.ChatRoom;
-import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
-import com.mini.buting.api.chat.dto.request.ChatReadRequest;
-import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
-import com.mini.buting.api.chat.dto.response.ChatMessagesResponse;
-import com.mini.buting.api.chat.dto.response.ChatRoomInfoResponse;
-import com.mini.buting.api.chat.dto.response.ChatRoomResponse;
-import com.mini.buting.api.chat.dto.response.ChatRoomUpdateResponse;
-import com.mini.buting.api.chat.service.ChatReadNotifier;
-import com.mini.buting.api.chat.service.ChatRoomListService;
-import com.mini.buting.api.chat.service.ChatRoomService;
-import com.mini.buting.api.chat.service.ChatService;
+import com.mini.buting.api.chat.dto.request.*;
+import com.mini.buting.api.chat.dto.response.*;
+import com.mini.buting.api.chat.service.*;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.matchRequest.repository.MatchRequestRepository;
 import com.mini.buting.global.response.BaseResponse;
@@ -35,6 +27,8 @@ public class ChatController {
     private final MatchRequestRepository matchRequestRepository;
     private final ChatReadNotifier chatReadNotifier;
     private final ChatRoomListService chatRoomListService;
+    private final NoticeService noticeService;
+    private final VoteService voteService;
 
     // 메시지 전송 - senderId는 수정 예정
     @MessageMapping("chat.message.{roomId}")
@@ -110,16 +104,96 @@ public class ChatController {
         return BaseResponse.onSuccess(updateRoom);
     }
 
-    // 공지 등록
+    // 공지 등록 + 수정
+    @PutMapping("/{roomId}/notice")
+    public BaseResponse<NoticeResponse> upsertNotice(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody NoticeUpsertRequest request
+    ){
+
+        NoticeResponse notice = noticeService.upsertNotice(roomId, senderId, request);
+
+        return BaseResponse.onSuccess(notice);
+    }
 
     // 공지 조회
+    @GetMapping("/{roomId}/notice")
+    public BaseResponse<NoticeViewResponse> getNotice(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        NoticeViewResponse notice = noticeService.getNotice(roomId, senderId);
+
+        return BaseResponse.onSuccess(notice);
+    }
+
+    // 공지 삭제
+    @DeleteMapping("/{roomId}/notice")
+    public BaseResponse<Void> deleteNotice(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        noticeService.delete(roomId, senderId);
+
+        return BaseResponse.onSuccess();
+    }
 
     // 메시지 좋아요
 
     // 투표 등록
+    @PostMapping("/{roomId}/vote")
+    public BaseResponse<VoteInfoResponse> createVote(
+            @PathVariable String roomId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody VoteCreateRequest vote
+            ){
+
+        VoteInfoResponse voteInfoResponse = voteService.createVote(roomId, senderId, vote);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
 
     // 투표 조회
+    @GetMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<VoteInfoResponse> getVoteInfo(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId
+    ){
+
+        VoteInfoResponse voteInfoResponse = voteService.getVoteInfo(roomId, voteId, senderId);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
+
 
     // 투표 하기
+    @PutMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<VoteInfoResponse> vote(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId,
+            @RequestBody VoteBallotCreateRequest vote
+    ){
+        VoteInfoResponse voteInfoResponse = voteService.vote(roomId, voteId, senderId, vote);
+
+        return BaseResponse.onSuccess(voteInfoResponse);
+    }
+
+    // 투표 삭제
+    @DeleteMapping("/{roomId}/vote/{voteId}")
+    public BaseResponse<Void> deleteVote(
+            @PathVariable String roomId,
+            @PathVariable String voteId,
+            @RequestHeader("senderId") Long senderId
+    ){
+        voteService.deleteVote(roomId, voteId, senderId);
+
+        return BaseResponse.onSuccess();
+    }
+
 
 }
