@@ -6,7 +6,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 /**
  * <h2>Kakao 전용 사용자 정보 생성 팩토리</h2>
  */
-public class KakaoOAuth2UserInfoFactory implements OAuth2UserInfoFactory {
+public class KakaoUserInfoFactory implements OAuth2UserInfoFactory {
     @Override
     public boolean supports(SocialProvider providerName) {
         return SocialProvider.KAKAO.equals(providerName);
