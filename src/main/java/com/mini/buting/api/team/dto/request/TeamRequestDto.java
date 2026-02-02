@@ -75,4 +75,24 @@ public class TeamRequestDto {
     @Builder
     public record RespondToInvitationRequest(@NotNull(message = "응답은 필수입니다.") Boolean accept) {
     }
+
+    /**
+     * 팀 매칭글(=오픈 팀) 수정 요청
+     * - 부분 수정(PATCH) 용도라 모두 optional
+     * - 세부 검증(최소 1개 필드 포함, 범위 쌍 동시 입력, min<=max 등)은 서비스에서 처리
+     */
+    @Builder
+    public record UpdateMatchPostRequest(
+                    @Size(max = 50, message = "팀 제목은 50자를 초과할 수 없습니다.") String title,
+                    @Size(max = 255, message = "팀 소개는 255자를 초과할 수 없습니다.") String description,
+                    TeamMood preferredMood,
+                    @Min(value = 18, message = "최소 나이는 18세 이상이어야 합니다.") @Max(value = 100,
+                                    message = "최소 나이는 100세 이하여야 합니다.") Integer preferredAgeMin,
+                    @Min(value = 18, message = "최대 나이는 18세 이상이어야 합니다.") @Max(value = 100,
+                                    message = "최대 나이는 100세 이하여야 합니다.") Integer preferredAgeMax,
+                    @Min(value = 0, message = "최소 학번은 0 이상이어야 합니다.") @Max(value = 99,
+                                    message = "최소 학번은 99 이하여야 합니다.") Integer preferredEntryYearMin,
+                    @Min(value = 0, message = "최대 학번은 0 이상이어야 합니다.") @Max(value = 99,
+                                    message = "최대 학번은 99 이하여야 합니다.") Integer preferredEntryYearMax) {
+    }
 }

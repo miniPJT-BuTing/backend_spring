@@ -1,5 +1,6 @@
 package com.mini.buting.api.team.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mini.buting.api.team.domain.*;
 import lombok.Builder;
 
@@ -64,5 +65,34 @@ public class TeamResponseDto {
     public record RespondToInvitationResponse(Long invitationId,
                                               TeamInvitation.InvitationStatus status,
                                               String message) {
+    }
+
+    /**
+     * 팀 매칭글(=오픈 팀) 목록 아이템
+     */
+    @Builder
+    public record TeamMatchPostSummary(Long teamId, String title, TeamSize teamSize, Gender gender,
+                                       String preferredMood,
+                                       Integer preferredAgeMin, Integer preferredAgeMax,
+                                       Integer preferredEntryYearMin, Integer preferredEntryYearMax,
+                                       Integer currentMemberCount, Integer targetMemberCount,
+                                       @JsonFormat(shape = JsonFormat.Shape.STRING,
+                                                       pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime createdAt) {
+    }
+
+    /**
+     * 팀 매칭글(=오픈 팀) 상세
+     */
+    @Builder
+    public record TeamMatchPostDetail(Long teamId, String title, String description, TeamSize teamSize,
+                                      Gender gender, String preferredMood,
+                                      Integer preferredAgeMin, Integer preferredAgeMax,
+                                      Integer preferredEntryYearMin, Integer preferredEntryYearMax,
+                                      Integer currentMemberCount, Integer targetMemberCount,
+                                      MemberInfo leaderInfo,
+                                      @JsonFormat(shape = JsonFormat.Shape.STRING,
+                                                      pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime createdAt,
+                                      @JsonFormat(shape = JsonFormat.Shape.STRING,
+                                                      pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime updatedAt) {
     }
 }
