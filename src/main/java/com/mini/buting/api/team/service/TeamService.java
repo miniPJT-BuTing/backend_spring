@@ -2,12 +2,15 @@ package com.mini.buting.api.team.service;
 
 import com.mini.buting.api.friend.domain.Friend;
 import com.mini.buting.api.friend.repository.FriendRepository;
+import com.mini.buting.api.matchRequest.repository.MatchRequestRepository;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.api.team.domain.Gender;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.api.team.domain.TeamInvitation;
 import com.mini.buting.api.team.domain.TeamMember;
+import com.mini.buting.api.team.domain.TeamMood;
+import com.mini.buting.api.team.domain.TeamSize;
 import com.mini.buting.api.team.dto.request.TeamRequestDto;
 import com.mini.buting.api.team.dto.response.TeamResponseDto;
 import com.mini.buting.api.team.repository.TeamInvitationRepository;
@@ -17,10 +20,14 @@ import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +41,7 @@ public class TeamService {
     private final MemberRepository memberRepository;
     private final FriendRepository friendRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final MatchRequestRepository matchRequestRepository;
 
     /**
      * 팀 생성
@@ -49,7 +57,7 @@ public class TeamService {
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
         // 2. 팀장이 이미 다른 팀의 리더인지 확인
-        if (teamRepository.existsByLeader(leader)) {
+        if (teamRepository.existsByLeaderAndIsDeletedFalse(leader)) {
             throw new BaseException(BaseResponseStatus.ALREADY_TEAM_LEADER);
         }
 
@@ -218,6 +226,153 @@ public class TeamService {
 
             log.debug("팀 오픈 상태 변경 - teamId: {}, 모든 초대가 수락됨", team.getId());
         }
+    }
+
+    /**
+     * 팀 매칭글(=오픈 팀) 목록 조회
+     */
+    public Page<TeamResponseDto.TeamMatchPostSummary> getMatchingPosts(Gender gender, TeamSize teamSize,
+                    TeamMood preferredMood, Pageable pageable) {
+        Page<Team> page = teamRepository.findMatchingPosts(gender, teamSize, preferredMood, pageable);
+
+        List<Long> teamIds = page.getContent().stream().map(Team::getId).toList();
+        Map<Long, Long> memberCountMap = new HashMap<>();
+        if (!teamIds.isEmpty()) {
+            teamMemberRepository.countMembersByTeamIds(teamIds).forEach(row -> memberCountMap.put(
+                            row.getTeamId(), row.getMemberCount()));
+        }
+
+        return page.map(team -> {
+            long current = memberCountMap.getOrDefault(team.getId(), 0L);
+            return TeamResponseDto.TeamMatchPostSummary.builder().teamId(team.getId())
+                            .title(team.getTitle()).teamSize(team.getTeamSize())
+                            .gender(team.getGender())
+                            .preferredMood(team.getPreferredMood().getDisplayName())
+                            .preferredAgeMin(team.getPreferredAgeMin().intValue())
+                            .preferredAgeMax(team.getPreferredAgeMax().intValue())
+                            .preferredEntryYearMin(team.getPreferredEntryYearMin().intValue())
+                            .preferredEntryYearMax(team.getPreferredEntryYearMax().intValue())
+                            .currentMemberCount((int) current)
+                            .targetMemberCount(team.getTeamSize().getSize())
+                            .createdAt(team.getCreatedAt()).build();
+        });
+    }
+
+    /**
+     * 팀 매칭글(=오픈 팀) 상세 조회
+     */
+    public TeamResponseDto.TeamMatchPostDetail getMatchingPostDetail(Long teamId) {
+        Team team = teamRepository.findByIdAndIsOpenTrueAndIsDeletedFalse(teamId)
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_NOT_FOUND));
+        return toMatchPostDetail(team);
+    }
+
+    /**
+     * 팀장 전용: 매칭글 수정 (매칭 성사 전까지만 허용)
+     */
+    @Transactional
+    public TeamResponseDto.TeamMatchPostDetail updateMatchingPost(Long leaderId, Long teamId,
+                    TeamRequestDto.UpdateMatchPostRequest request) {
+        Team team = teamRepository.findByIdWithLeader(teamId)
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_NOT_FOUND));
+
+        if (!team.getLeader().getId().equals(leaderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
+        }
+
+        // 매칭 성사 후에는 수정 불가
+        if (matchRequestRepository.existsAcceptedByTeamId(teamId)) {
+            throw new BaseException(BaseResponseStatus.TEAM_ALREADY_MATCHED);
+        }
+
+        boolean hasAny = request.title() != null || request.description() != null
+                        || request.preferredMood() != null || request.preferredAgeMin() != null
+                        || request.preferredAgeMax() != null || request.preferredEntryYearMin() != null
+                        || request.preferredEntryYearMax() != null;
+        if (!hasAny) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+
+        // 범위 쌍 검증
+        if ((request.preferredAgeMin() == null) != (request.preferredAgeMax() == null)) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        if (request.preferredAgeMin() != null && request.preferredAgeMin() > request.preferredAgeMax()) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        if ((request.preferredEntryYearMin() == null) != (request.preferredEntryYearMax() == null)) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        if (request.preferredEntryYearMin() != null
+                        && request.preferredEntryYearMin() > request.preferredEntryYearMax()) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+
+        if (request.title() != null) {
+            team.updateTitle(request.title());
+        }
+        if (request.description() != null) {
+            team.updateDescription(request.description());
+        }
+        if (request.preferredMood() != null) {
+            team.updatePreferredMood(request.preferredMood());
+        }
+        if (request.preferredAgeMin() != null) {
+            team.updatePreferredAgeRange(request.preferredAgeMin(), request.preferredAgeMax());
+        }
+        if (request.preferredEntryYearMin() != null) {
+            team.updatePreferredEntryYearRange(request.preferredEntryYearMin(),
+                            request.preferredEntryYearMax());
+        }
+
+        teamRepository.save(team);
+        return toMatchPostDetail(team);
+    }
+
+    /**
+     * 팀장 전용: 매칭글 삭제(해체) - 매칭 성사 전까지만 허용
+     */
+    @Transactional
+    public void deleteMatchingPost(Long leaderId, Long teamId) {
+        Team team = teamRepository.findByIdWithLeader(teamId)
+                        .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_NOT_FOUND));
+
+        if (!team.getLeader().getId().equals(leaderId)) {
+            throw new BaseException(BaseResponseStatus.NOT_TEAM_LEADER);
+        }
+
+        if (matchRequestRepository.existsAcceptedByTeamId(teamId)) {
+            throw new BaseException(BaseResponseStatus.TEAM_ALREADY_MATCHED);
+        }
+
+        team.softDelete();
+        teamRepository.save(team);
+    }
+
+    private TeamResponseDto.TeamMatchPostDetail toMatchPostDetail(Team team) {
+        long currentMemberCount = teamMemberRepository.countByTeam(team);
+
+        Member leader = team.getLeader();
+        TeamResponseDto.MemberInfo leaderInfo = TeamResponseDto.MemberInfo.builder()
+                        .memberId(leader.getId()).nickname(leader.getNickname()).age(leader.getAge())
+                        .bio(leader.getBio())
+                        .universityName(leader.getUniversity() != null ?
+                                        leader.getUniversity().getName() :
+                                        null)
+                        .collegeName(leader.getCollege() != null ? leader.getCollege().getName() : null)
+                        .build();
+
+        return TeamResponseDto.TeamMatchPostDetail.builder().teamId(team.getId())
+                        .title(team.getTitle()).description(team.getDescription())
+                        .teamSize(team.getTeamSize()).gender(team.getGender())
+                        .preferredMood(team.getPreferredMood().getDisplayName())
+                        .preferredAgeMin(team.getPreferredAgeMin().intValue())
+                        .preferredAgeMax(team.getPreferredAgeMax().intValue())
+                        .preferredEntryYearMin(team.getPreferredEntryYearMin().intValue())
+                        .preferredEntryYearMax(team.getPreferredEntryYearMax().intValue())
+                        .currentMemberCount((int) currentMemberCount)
+                        .targetMemberCount(team.getTeamSize().getSize()).leaderInfo(leaderInfo)
+                        .createdAt(team.getCreatedAt()).updatedAt(team.getUpdatedAt()).build();
     }
 
     /**

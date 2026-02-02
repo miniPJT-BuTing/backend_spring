@@ -43,14 +43,14 @@ public class MatchRequestService {
         Member member = getMember(memberId);
 
         // 요청 팀은 팀장 기준으로 식별
-        Team requestTeam = teamRepository.findByLeader(member)
+        Team requestTeam = teamRepository.findByLeaderAndIsDeletedFalse(member)
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_TEAM_LEADER));
 
         // 매칭 가능한 상태인지 확인
         validateTeamReady(requestTeam);
 
         // 대상 팀 조회
-        Team targetTeam = teamRepository.findById(request.targetTeamId())
+        Team targetTeam = teamRepository.findByIdAndIsDeletedFalse(request.targetTeamId())
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.TEAM_NOT_FOUND));
 
         // 자기 팀으로는 요청 불가
@@ -103,7 +103,7 @@ public class MatchRequestService {
                     Long matchRequestId, MatchRequestRequestDto.RespondMatchRequest request) {
         // 응답자(대상 팀 리더) 확인
         Member member = getMember(memberId);
-        Team leaderTeam = teamRepository.findByLeader(member)
+        Team leaderTeam = teamRepository.findByLeaderAndIsDeletedFalse(member)
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_TEAM_LEADER));
 
         // 요청 및 연관 팀 로딩
@@ -149,7 +149,7 @@ public class MatchRequestService {
                     Long matchRequestId) {
         // 요청자 팀(리더) 기준 권한 확인
         Member member = getMember(memberId);
-        Team leaderTeam = teamRepository.findByLeader(member)
+        Team leaderTeam = teamRepository.findByLeaderAndIsDeletedFalse(member)
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_TEAM_LEADER));
 
         // 요청 팀 또는 대상 팀만 조회 가능
@@ -172,7 +172,7 @@ public class MatchRequestService {
                     String type, String status) {
         // 팀 리더 기준 목록 조회
         Member member = getMember(memberId);
-        Team leaderTeam = teamRepository.findByLeader(member)
+        Team leaderTeam = teamRepository.findByLeaderAndIsDeletedFalse(member)
                         .orElseThrow(() -> new BaseException(BaseResponseStatus.NOT_TEAM_LEADER));
 
         // 상태 파라미터 파싱

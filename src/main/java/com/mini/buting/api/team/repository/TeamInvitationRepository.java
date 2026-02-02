@@ -24,7 +24,7 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
     /**
      * 특정 멤버가 받은 대기중인 초대들 조회
      */
-    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team t " + "JOIN FETCH ti.inviter " + "WHERE ti.invitee = :invitee " + "AND ti.status = 'PENDING' " + "AND ti.expiredAt > :now")
+    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team t " + "JOIN FETCH ti.inviter " + "WHERE ti.invitee = :invitee " + "AND ti.status = 'PENDING' " + "AND ti.expiredAt > :now " + "AND t.isDeleted = false")
     List<TeamInvitation> findPendingInvitationsByInvitee(@Param("invitee") Member invitee,
                     @Param("now") LocalDateTime now);
 
@@ -36,7 +36,7 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
     /**
      * 초대 ID와 초대받은 사람으로 초대 조회 (권한 확인용)
      */
-    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team " + "JOIN FETCH ti.inviter " + "WHERE ti.id = :invitationId AND ti.invitee = :invitee")
+    @Query("SELECT ti FROM TeamInvitation ti " + "JOIN FETCH ti.team t " + "JOIN FETCH ti.inviter " + "WHERE ti.id = :invitationId AND ti.invitee = :invitee " + "AND t.isDeleted = false")
     Optional<TeamInvitation> findByIdAndInvitee(@Param("invitationId") Long invitationId,
                     @Param("invitee") Member invitee);
 
