@@ -1,5 +1,6 @@
 package com.mini.buting.global.security.principal;
 
+import com.mini.buting.api.member.domain.Member;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -28,6 +29,23 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
  * </ul>
  */
 public interface AuthUser extends UserDetails, OAuth2User {
+
+    /**
+     * Member 엔티티를 바탕으로 인증 객체를 생성하는 정적 팩토리 메서드
+     * <p>상위 인터페이스에서 구현체를 직접 생성하여 반환함으로써, 호출부와 상세 구현체 간의 결합도를 낮추고자 했음.</p>
+     *
+     * @param member 사용자 엔티티
+     * @return {@link AuthUser} 구현체
+     */
+    static AuthUser from(Member member) {
+        return new PrincipalUser(
+                member.getId(),
+                member.getUuid(),
+                member.getRole(),
+                member.getIsDeleted(),
+                java.util.Collections.emptyMap()
+        );
+    }
 
     /**
      * 외부 노출용 고유 식별자 반환

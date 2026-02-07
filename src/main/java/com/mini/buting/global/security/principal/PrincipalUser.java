@@ -10,7 +10,7 @@ import java.util.Map;
 
 /**
  * <h2>인증된 사용자 정보 구현체</h2>
- * <p>{@code record}를 사용하여 데이터 불변성을 보장했으며, SecurityContext 내부에 저장되어 애플리케이션 전역에서 참조 가능</p>
+ * <p>사용자 정보의 불변성을 보장하기 위해 Java {@code record} 타입을 설정함.</p>
  *
  * @param id         데이터베이스의 PK로, 서버 내부 로직 및 연관관계 처리에 사용
  * @param uuid       외부 노출용 고유 식별자
