@@ -1,19 +1,29 @@
 package com.mini.buting.global.security.provider;
 
+import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.security.constant.SecurityConstants;
+import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.token.JwtToken;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -25,9 +35,11 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final SecurityProperties securityProperties;
+    private final MemberRepository memberRepository;
 
-    public JwtTokenProvider(SecurityProperties securityProperties) {
+    public JwtTokenProvider(SecurityProperties securityProperties, MemberRepository memberRepository) {
         this.securityProperties = securityProperties;
+        this.memberRepository = memberRepository;
         // Base64 인코딩된 SecretKey를 디코딩하여 HMAC-SHA 키 생성
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(securityProperties.jwt().secretKey()));
     }
@@ -104,10 +116,10 @@ public class JwtTokenProvider {
     /**
      * 토큰의 유효성을 boolean 값으로 반환
      * <p>필터 계층에서 인증 여부 판단을 위해 호출됨</p>
-     * @implNote TODO: 필터 계층에서 내부 헬퍼 메소드로 옮겨도 될 듯 함.
      *
      * @param token 검증할 JWT
      * @return 유효할 경우 {@code true}, 그렇지 않다면 {@code false}
+     * @implNote TODO: 필터 계층에서 내부 헬퍼 메소드로 옮겨도 될 듯 함.
      * @see com.mini.buting.global.security.filter.JwtAuthenticationFilter
      */
     public boolean validateToken(String token) {
@@ -156,5 +168,51 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    /**
+     * Request Header의 'Authorization' 필드에서 토큰 정보 추출
+     */
+    public String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(SecurityConstants.Token.GRANT_TYPE)) {
+            return bearerToken.substring(SecurityConstants.Token.GRANT_TYPE.length());
+        }
+        return null;
+    }
+
+    /**
+     * 전달된 JWT 토큰을 분석하여 스프링 시큐리티 인증 객체({@link Authentication})를 생성
+     *
+     * <p>토큰의 클레임에서 권한과 식별자를 추출한 뒤, DB 조회를 통해
+     * 최신 사용자 상태를 반영한 {@link AuthUser}를 생성함. 이 과정에서 사용자의 실제 PK를 인증 객체에 바인딩하여
+     * 이후 비즈니스 로직에서의 효율성을 확보함.</p>
+     *
+     * @param token 검증된 JWT 토큰
+     * @return SecurityContext에 저장될 인증 객체
+     * @throws BaseException 토큰에 권한 정보가 없거나({@code INVALID_TOKEN_CLAIM}),
+     *                       존재하지 않는 사용자의 토큰일 경우({@code MEMBER_NOT_FOUND}) 발생
+     */
+    public Authentication getAuthentication(String token) {
+        Claims claims = parseClaims(token);
+
+        if (claims.get(SecurityConstants.Token.AUTHORITIES_CLAIM) == null) {
+            throw new BaseException(BaseResponseStatus.INVALID_TOKEN_CLAIM);
+        }
+
+        // 토큰의 권한 정보(auth) 추출
+        Collection<? extends GrantedAuthority> authorities = Arrays
+                .stream(claims.get(SecurityConstants.Token.AUTHORITIES_CLAIM).toString().split(","))
+                .map(SimpleGrantedAuthority::new).toList();
+
+        // 토큰 주체(sub) 추출
+        String memberUuid = claims.getSubject();
+
+        // DB 조회를 통해 principal 생성
+        AuthUser principal = memberRepository.findByUuid(memberUuid)
+                .map(AuthUser::from)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 }
