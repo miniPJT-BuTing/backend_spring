@@ -24,9 +24,10 @@ public enum BaseResponseStatus {
 
     // 401 UNAUTHORIZED: 인증 실패
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
+    AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 실패했습니다."),
 
-    INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
-    EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "유효하지 않은 JWT 토큰입니다."),
+    INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "유효하지 않은 JWT 토큰입니다."),
+    EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "만료된 JWT 토큰입니다."),
     UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "지원되지 않는 형식의 JWT 토큰입니다."),
     INVALID_TOKEN_CLAIM(HttpStatus.UNAUTHORIZED, false, 401, "토큰 정보가 올바르지 않습니다."),
 
