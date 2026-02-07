@@ -88,11 +88,7 @@ public class JwtTokenProvider {
      */
     public Claims parseClaims(String token) {
         try {
-            return Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            return getClaims(token);
         } catch (SecurityException | MalformedJwtException | IllegalArgumentException e) {
             log.warn("{} Invalid JWT signature or format: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
             throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
@@ -108,6 +104,7 @@ public class JwtTokenProvider {
     /**
      * 토큰의 유효성을 boolean 값으로 반환
      * <p>필터 계층에서 인증 여부 판단을 위해 호출됨</p>
+     * @implNote TODO: 필터 계층에서 내부 헬퍼 메소드로 옮겨도 될 듯 함.
      *
      * @param token 검증할 JWT
      * @return 유효할 경우 {@code true}, 그렇지 않다면 {@code false}
@@ -124,5 +121,40 @@ public class JwtTokenProvider {
         } catch (BaseException e) {
             return false;
         }
+    }
+
+    /**
+     * 토큰에서 subject 정보를 추출
+     * <p>토큰 재발급을 위해 만료된 토큰에서도 서명(sub)만 유효하다면 동일하게 claims 정보를 파싱합니다.</p>
+     *
+     * @param token 정보를 추출할 JWT 토큰
+     * @return 토큰의 subject 정보
+     */
+    public String getSubjectFromToken(String token) {
+        if (!StringUtils.hasText(token)) {
+            throw new BaseException(BaseResponseStatus.AUTHENTICATION_REQUIRED);
+        }
+
+        try {
+            return getClaims(token).getSubject();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("{} Failed to extract subject: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
+            throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
+        }
+    }
+
+    /**
+     * 토큰에서 클레임 정보를 파싱하기 위한 내부 헬퍼 메서드
+     * <p>서명 검증을 포함한 순수 JWT 파싱 로직을 담당
+     * 예외의 경우 직접 처리하지 않고, 호출자에게 던져 세부 처리를 위임함.</p>
+     */
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
