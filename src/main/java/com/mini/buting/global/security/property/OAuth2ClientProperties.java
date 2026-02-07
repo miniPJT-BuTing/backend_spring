@@ -24,7 +24,7 @@ public record OAuth2ClientProperties(
      * @param clientId                   OAuth2 서버로부터 발급받은 클라이언트 ID
      * @param clientSecret               OAuth2 서버로부터 발급받은 클라이언트 보안 비밀번호
      * @param redirectUri                인증 성공 후, 권한 코드를 전달받을 애플리케이션의 URI 패턴
-     * @param AuthorizationGrantType     권한 부여 방식
+     * @param authorizationGrantType     권한 부여 방식
      * @param clientAuthenticationMethod 클라이언트 인증 방법
      * @param clientName                 인증 화면 등에 표시될 서비스 이름
      * @param scope                      리소스 서버로부터 요청할 사용자 권한 범위
@@ -33,7 +33,7 @@ public record OAuth2ClientProperties(
             String clientId,
             String clientSecret,
             String redirectUri,
-            String AuthorizationGrantType,
+            String authorizationGrantType,
             String clientAuthenticationMethod,
             String clientName,
             List<String> scope

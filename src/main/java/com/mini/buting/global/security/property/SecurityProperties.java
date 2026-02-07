@@ -21,12 +21,14 @@ import java.util.List;
  * @param whitelist   인증이 불필요한 공용 API 경로 목록
  * @param cors        CORS 상세 정책
  * @param accessRules 권한({@code role})별 접근 제어 규칙 목록
+ * @param oauth2      OAuth2 관련 커스텀 경로 설정
  */
 @ConfigurationProperties(prefix = "security")
 public record SecurityProperties(
         JwtProperties jwt,
         WhitelistProperties whitelist,
         CorsProperties cors,
-        List<AccessRuleProperties.AccessRule> accessRules
+        List<AccessRuleProperties.AccessRule> accessRules,
+        OAuth2Properties oauth2
 ) {
 }
