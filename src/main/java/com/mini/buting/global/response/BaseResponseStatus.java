@@ -20,9 +20,15 @@ public enum BaseResponseStatus {
     NOT_FOUND(HttpStatus.NOT_FOUND, false, 404, "요청하신 정보를 찾을 수 없습니다."),
     PAYLOAD_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, false, 413, "파일 업로드 용량 초과입니다. 파일 당 요청 합계 제한을 확인하세요."),
 
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, false, 403, "접근 권한이 없습니다."),
+
+    // 401 UNAUTHORIZED: 인증 실패
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
 
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, false, 403, "접근 권한이 없습니다."),
+    INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
+    EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "유효하지 않은 JWT 토큰입니다."),
+    UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "지원되지 않는 형식의 JWT 토큰입니다."),
+    INVALID_TOKEN_CLAIM(HttpStatus.UNAUTHORIZED, false, 401, "토큰 정보가 올바르지 않습니다."),
 
     /**
      * 5xx: Sever Error (서버 에러)
