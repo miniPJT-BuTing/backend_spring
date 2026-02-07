@@ -3,6 +3,7 @@ package com.mini.buting.global.security.principal.oauth2;
 import com.mini.buting.api.member.domain.SocialProvider;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * <h2>Kakao 사용자 정보 Parser</h2>
@@ -13,13 +14,15 @@ import java.util.Map;
 public record KakaoUserInfo(Map<String, Object> attributes) implements OAuth2UserInfo {
     @Override
     public String getProviderId() {
-        return String.valueOf(attributes.get(Key.ID));
+        Object id = attributes.get(Key.ID);
+        return id != null ? String.valueOf(id) : null;
     }
 
     @Override
     public String getProviderEmail() {
-        KakaoAccount kakaoAccount = getKakaoAccount();
-        return kakaoAccount != null ? kakaoAccount.email() : null;
+        return Optional.ofNullable(getKakaoAccount())
+                .map(KakaoAccount::email)
+                .orElse(null);
     }
 
     @Override
