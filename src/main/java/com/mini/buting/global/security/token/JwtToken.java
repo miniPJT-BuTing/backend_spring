@@ -30,4 +30,12 @@ public record JwtToken(
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
+
+    public static JwtToken of(String grantType, String accessToken, String refreshToken) {
+        return JwtToken.builder()
+                .grantType(grantType)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
 }
