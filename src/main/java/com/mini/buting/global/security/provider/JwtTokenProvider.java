@@ -34,20 +34,21 @@ public class JwtTokenProvider {
 
     /**
      * 사용자의 식별값과 권한 정보를 바탕으로 Access & Refresh Token 세트 생성
+     * <p>Refresh Token의 경우 권한 클레임을 생략</p>
      *
      * @param subject     토큰의 주체
      * @param authorities 쉼표(,)로 구분된 사용자 권한 목록(Ex: "ROLE_USER,ROLE_ADMIN")
      * @return 발급된 {@link JwtToken} 객체 (Grant Type, Access/Refresh Token 포함)
      */
-    public JwtToken createToken(String subject, String authorities) {
+    public JwtToken generateTokenSet(String subject, String authorities) {
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
 
-        // AccessToken
+        // AccessToken 생성
         Date accessExpirationDate = new Date(now + securityProperties.jwt().expireTime().access().toMillis());
         String accessToken = generateToken(subject, authorities, issuedAt, accessExpirationDate);
 
-        // RefreshToken
+        // RefreshToken 생성
         Date refreshExpirationDate = new Date(now + securityProperties.jwt().expireTime().refresh().toMillis());
         String refreshToken = generateToken(subject, null, issuedAt, refreshExpirationDate);
 
