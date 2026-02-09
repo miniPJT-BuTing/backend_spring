@@ -36,4 +36,19 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, TeamMemb
 
     @Query("SELECT COUNT(tm) FROM TeamMember tm WHERE tm.team = :team")
     long countByTeam(@Param("team") Team team);
+
+    /**
+     * 팀별 멤버 수 집계 (목록 조회 최적화)
+     */
+    @Query("SELECT tm.team.id AS teamId, COUNT(tm) AS memberCount " +
+                    "FROM TeamMember tm " +
+                    "WHERE tm.team.id IN :teamIds " +
+                    "GROUP BY tm.team.id")
+    List<TeamMemberCount> countMembersByTeamIds(@Param("teamIds") List<Long> teamIds);
+
+    interface TeamMemberCount {
+        Long getTeamId();
+
+        Long getMemberCount();
+    }
 }

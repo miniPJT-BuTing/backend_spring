@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Team", indexes = {
@@ -82,6 +83,12 @@ public class Team extends BaseTimeEntity {
     @Column(name = "is_open", nullable = false)
     private Boolean isOpen;
 
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     // 연관관계
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id", nullable = false)
@@ -120,8 +127,29 @@ public class Team extends BaseTimeEntity {
         this.isOpen = isOpen;
     }
 
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
     public void updateDescription(String description) {
         this.description = description;
+    }
+
+    public void updatePreferredMood(TeamMood preferredMood) {
+        this.preferredMood = preferredMood;
+    }
+
+    public void updatePreferredAgeRange(Integer preferredAgeMin, Integer preferredAgeMax) {
+        this.preferredAgeMin = preferredAgeMin == null ? null : preferredAgeMin.byteValue();
+        this.preferredAgeMax = preferredAgeMax == null ? null : preferredAgeMax.byteValue();
+    }
+
+    public void updatePreferredEntryYearRange(Integer preferredEntryYearMin,
+                    Integer preferredEntryYearMax) {
+        this.preferredEntryYearMin =
+                        preferredEntryYearMin == null ? null : preferredEntryYearMin.byteValue();
+        this.preferredEntryYearMax =
+                        preferredEntryYearMax == null ? null : preferredEntryYearMax.byteValue();
     }
 
     public void activate() {
@@ -137,7 +165,16 @@ public class Team extends BaseTimeEntity {
     }
 
     public boolean canRequestMatch() {
-        return isFullTeam() && isOpen;
+        return !Boolean.TRUE.equals(isDeleted) && isFullTeam() && Boolean.TRUE.equals(isOpen);
+    }
+
+    public void softDelete() {
+        if (Boolean.TRUE.equals(this.isDeleted)) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+        this.isOpen = false;
     }
 
     // 팀원 관리 메서드

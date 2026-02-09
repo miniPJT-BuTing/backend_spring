@@ -120,6 +120,7 @@ public enum BaseResponseStatus {
     TEAM_SIZE_MISMATCH(HttpStatus.BAD_REQUEST, false, 4503, "초대할 멤버 수가 팀 크기와 일치하지 않습니다."),
     DIFFERENT_GENDER_CANNOT_INVITE(HttpStatus.BAD_REQUEST, false, 4504, "다른 성별의 사용자는 초대할 수 없습니다."),
     TEAM_NOT_READY(HttpStatus.BAD_REQUEST, false, 4505, "모든 멤버가 수락해야 팀이 활성화됩니다."),
+    TEAM_ALREADY_MATCHED(HttpStatus.BAD_REQUEST, false, 4506, "매칭이 성사된 팀은 수정/삭제할 수 없습니다."),
 
     /**
      * 5000: 채팅방 관련 에러
