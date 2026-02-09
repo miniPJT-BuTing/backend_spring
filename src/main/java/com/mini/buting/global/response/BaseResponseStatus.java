@@ -76,7 +76,11 @@ public enum BaseResponseStatus {
      */
     MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
     MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다."),
-    MATCH_REQUEST_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, false, 4001, "수락 된 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, false, 4003, "수락 된 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4004, "매칭 요청을 찾을 수 없습니다."),
+    MATCH_REQUEST_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, false, 4005, "이미 존재하는 매칭 요청입니다."),
+    MATCH_REQUEST_SELF(HttpStatus.BAD_REQUEST, false, 4006, "같은 팀으로는 매칭 요청을 보낼 수 없습니다."),
+    MATCH_REQUEST_SAME_GENDER(HttpStatus.BAD_REQUEST, false, 4007, "같은 성별 팀과는 매칭할 수 없습니다."),
     /**
      * 4100: MBTI 관련 에러
      */
