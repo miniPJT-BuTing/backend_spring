@@ -14,8 +14,6 @@ import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +38,10 @@ public class NoticeService {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
 
-
         Member member = memberRepository.findByIdWithDetails(senderId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        chatRoomService.isLeader(senderId, room);
 
         Notice notice = noticeRepository.findById(roomId).orElse(null);
         NoticeResponse response = null;
@@ -100,4 +99,5 @@ public class NoticeService {
             throw new BaseException(BaseResponseStatus.NOTICE_NOT_FOUND);
         }
     }
+
 }
