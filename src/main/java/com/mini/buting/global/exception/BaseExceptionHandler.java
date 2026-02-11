@@ -2,6 +2,8 @@ package com.mini.buting.global.exception;
 
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.response.BaseResponseStatus;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -32,7 +34,18 @@ public class BaseExceptionHandler {
     protected BaseResponse<Void> handleValidException(MethodArgumentNotValidException e) {
         String errorMessage = e.getFieldErrors().get(0).getDefaultMessage();
         writeLog(BaseResponseStatus.INVALID_REQUEST, e, errorMessage);
-        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST, errorMessage);
+        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST);
+    }
+
+    /* @RequestParam 검증 */
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected BaseResponse<Void> handleViolationException(ConstraintViolationException e) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .findFirst()
+                .orElse(BaseResponseStatus.INVALID_REQUEST.getMessage());
+        writeLog(BaseResponseStatus.INVALID_REQUEST, e, errorMessage);
+        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST);
     }
 
     /* 파일 용량 초과 */
