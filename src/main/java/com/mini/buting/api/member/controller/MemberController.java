@@ -1,5 +1,6 @@
 package com.mini.buting.api.member.controller;
 
+import com.mini.buting.api.auth.dto.out.MemberAvailabilityResponse;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
 import com.mini.buting.api.member.dto.SignUpRequestDto;
 import com.mini.buting.api.member.service.MemberService;
@@ -27,7 +28,7 @@ public class MemberController {
      */
     @GetMapping("/profile/me")
     public BaseResponse<MemberProfileResponse> getMyProfile(
-                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId) {
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId) {
 
         log.debug("내 프로필 조회 요청: userId={}", userId);
 
@@ -75,4 +76,24 @@ public class MemberController {
         // TODO: 회원가입 서비스 로직 호출
         return BaseResponse.onSuccess();
     }
+
+    /**
+     * 멤버 정보 중복 체크
+     * <p>닉네임 또는 이메일의 사용 가능 여부를 확인.
+     * 둘 중 하나의 파라미터는 반드시 포함되어야 함.</p>
+     *
+     * @param email 중복 체크할 계정 이메일 (선택)
+     * @param nickname  중복 체크할 서비스 닉네임 (선택)
+     * @return {@code isAvailable: true} (사용 가능), {@code false} (중복임)
+     */
+    @Operation(summary = "멤버 정보 중복 확인 API",
+            description = "닉네임 또는 이메일의 사용 가능 여부를 확인함. 둘 중 하나의 파라미터는 반드시 포함되어야 함.")
+    @GetMapping("/availability")
+    public BaseResponse<MemberAvailabilityResponse> checkAvailability(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "nickname", required = false) String nickname
+    ) {
+        return null;
+    }
+
 }
