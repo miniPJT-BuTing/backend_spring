@@ -132,7 +132,10 @@ public enum BaseResponseStatus {
     VOTE_NOT_AVAILABLE(HttpStatus.FORBIDDEN, false, 5010, "투표가 불가능합니다."),
     VOTE_OPTION_REQUIRED(HttpStatus.BAD_REQUEST, false, 5011, "옵션을 하나 이상 선택해야합니다."),
     VOTE_NOT_MULTIPLE(HttpStatus.BAD_REQUEST, false, 5012, "단일 투표에서 중복 투표는 불가능합니다."),
-    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다.");
+    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다."),
+
+    READ_FILE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6001, "파일을 읽는데 실패했습니다."),
+    FAST_API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6002, "AI 분석에 실패했습니다.");
 
 
     private final HttpStatusCode httpStatusCode;
