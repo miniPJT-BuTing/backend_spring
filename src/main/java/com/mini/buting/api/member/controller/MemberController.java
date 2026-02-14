@@ -1,17 +1,23 @@
 package com.mini.buting.api.member.controller;
 
-import com.mini.buting.api.auth.dto.out.MemberAvailabilityResponse;
+import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
 import com.mini.buting.api.member.dto.SignUpRequestDto;
 import com.mini.buting.api.member.service.MemberService;
+import com.mini.buting.global.constant.ErrorMessages;
+import com.mini.buting.global.constant.Patterns;
 import com.mini.buting.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -82,18 +88,23 @@ public class MemberController {
      * <p>닉네임 또는 이메일의 사용 가능 여부를 확인.
      * 둘 중 하나의 파라미터는 반드시 포함되어야 함.</p>
      *
-     * @param email 중복 체크할 계정 이메일 (선택)
-     * @param nickname  중복 체크할 서비스 닉네임 (선택)
+     * @param email    중복 체크할 계정 이메일 (선택)
+     * @param nickname 중복 체크할 서비스 닉네임 (선택)
      * @return {@code isAvailable: true} (사용 가능), {@code false} (중복임)
      */
     @Operation(summary = "멤버 정보 중복 확인 API",
             description = "닉네임 또는 이메일의 사용 가능 여부를 확인함. 둘 중 하나의 파라미터는 반드시 포함되어야 함.")
     @GetMapping("/availability")
-    public BaseResponse<MemberAvailabilityResponse> checkAvailability(
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "nickname", required = false) String nickname
+    public BaseResponse<List<MemberAvailabilityResponse>> checkAvailability(
+            @RequestParam(value = "email", required = false)
+            @Email(message = ErrorMessages.INVALID_EMAIL)
+            String email,
+
+            @RequestParam(value = "nickname", required = false)
+            @Pattern(regexp = Patterns.NICKNAME_REGEX, message = ErrorMessages.INVALID_NICKNAME)
+            String nickname
     ) {
-        return null;
+        return BaseResponse.onSuccess(memberService.checkAvailability(email, nickname));
     }
 
 }
