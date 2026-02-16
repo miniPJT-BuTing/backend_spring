@@ -14,7 +14,6 @@ import org.hibernate.annotations.Comment;
         @Index(name = "idx_member_social_provider_id", columnList = "provider_id"),
         @Index(name = "idx_member_social_member", columnList = "member_id")
 }, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_member_social_email", columnNames = {"email"}),
         // 특정 소셜 플랫폼 내에서의 고유 식별값 중복 방지
         @UniqueConstraint(name = "uk_member_social_provider_combination", columnNames = {"provider_name", "provider_id"})
 })
