@@ -26,13 +26,6 @@ import java.io.IOException;
  *     <li>요청이 인증(Authentication)은 되었으나, 권한이 부족한 경우</li>
  *     <li>{@code hasRole}, {@code hasAuthority} 등의 인가 규칙 위반 시</li>
  * </ul>
- * <hr/>
- * <h5>우선순위</h5>
- * <ol>
- *     <li>응답이 이미 커밋된 경우({@link HttpServletResponse#isCommitted()}) 추가 응답 작성 금지</li>
- *     <li>URI/Method 기반 보안 로그 기록</li>
- *     <li>표준 에러 응답({@link BaseResponseStatus#ACCESS_DENIED}) 반환</li>
- * </ol>
  */
 @Slf4j
 @Component
