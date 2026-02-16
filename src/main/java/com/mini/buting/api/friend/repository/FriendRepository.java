@@ -67,4 +67,36 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
     Page<Friend> searchFriendsByNickname(@Param("memberId") Long memberId, 
                                         @Param("nickname") String nickname, 
                                         Pageable pageable);
+
+    /**
+     * 특정 멤버의 모든 친구들 조회
+     */
+    @Query("SELECT f FROM Friend f " +
+                    "JOIN FETCH f.member1 m1 " +
+                    "JOIN FETCH f.member2 m2 " +
+                    "JOIN FETCH m1.universityDomain " +
+                    "JOIN FETCH m2.universityDomain " +
+                    "LEFT JOIN FETCH m1.college " +
+                    "LEFT JOIN FETCH m2.college " +
+                    "WHERE f.member1 = :member OR f.member2 = :member")
+    List<Friend> findFriendsByMember(@Param("member") Member member);
+
+    /**
+     * 특정 멤버의 친구들을 검색 (닉네임 또는 이메일로)
+     */
+    @Query("SELECT f FROM Friend f " +
+                    "JOIN FETCH f.member1 m1 " +
+                    "JOIN FETCH f.member2 m2 " +
+                    "JOIN FETCH m1.universityDomain ud1 " +
+                    "JOIN FETCH m2.universityDomain ud2 " +
+                    "LEFT JOIN FETCH m1.college " +
+                    "LEFT JOIN FETCH m2.college " +
+                    "WHERE (f.member1 = :member AND " +
+                    "       (LOWER(m2.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                    "        LOWER(CONCAT(m2.universityEmail, '@', ud2.domain)) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
+                    "OR (f.member2 = :member AND " +
+                    "    (LOWER(m1.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                    "     LOWER(CONCAT(m1.universityEmail, '@', ud1.domain)) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
+    List<Friend> findFriendsByMemberAndKeyword(@Param("member") Member member,
+                    @Param("keyword") String keyword);
 }

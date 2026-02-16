@@ -28,7 +28,7 @@ public class ChatService {
 
     // 메시지 전송
     @Transactional
-    public void sendMessage(ChatMessageRequest message, Long senderId) {
+    public String sendMessage(ChatMessageRequest message, Long senderId) {
 
         Long roomId = Long.parseLong(message.roomId());
 
@@ -76,6 +76,7 @@ public class ChatService {
         // 채팅방 목록용 이벤트
         chatRoomListService.notifyRoomUpdated(roomId);
 
+        return messageDocument.getId();
     }
 
     private String makePreview(ChatMessageRequest message) {
@@ -95,12 +96,16 @@ public class ChatService {
                 else{
                     throw new BaseException(BaseResponseStatus.MESSAGE_PUBLISH_FAILED);
                 }
-
+            case WELCOME:
+                return "매칭에 성공했어요! 대화를 나눠보세요";
             default:
-                TextPayload payload = (TextPayload) message.payload();
-                String text = payload.text();
-                return text.length() <= 15 ? text : text.substring(0, 15);
+                if(message.payload() instanceof TextPayload){
+                    TextPayload payload = (TextPayload) message.payload();
+                    String text = payload.text();
+                    return text.length() <= 20 ? text : text.substring(0, 20);
+                }
         }
+        return null;
     }
 
 }

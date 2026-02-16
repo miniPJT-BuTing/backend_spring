@@ -41,9 +41,4 @@ public class ChatRoomMember extends BaseTimeEntity {
         this.lastReadSeq = (lastReadSeq == null ? 0L : lastReadSeq);
     }
 
-    public void advanceLastReadSeq(Long newSeq) {
-        if (newSeq == null) return;
-        if (this.lastReadSeq == null) this.lastReadSeq = 0L;
-        if (newSeq > this.lastReadSeq) this.lastReadSeq = newSeq;
-    }
 }

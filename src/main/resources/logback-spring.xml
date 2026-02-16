@@ -8,7 +8,7 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
-            <charset>EUC-KR</charset>
+            <charset>UTF-8</charset> <!-- EUC-KR -> UTF-8 변경 -->
         </encoder>
     </appender>
 

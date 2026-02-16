@@ -6,7 +6,6 @@ import com.mini.buting.api.chat.domain.chatroom.Notice;
 import com.mini.buting.api.chat.domain.payload.NoticePayload;
 import com.mini.buting.api.chat.dto.request.ChatMessageRequest;
 import com.mini.buting.api.chat.dto.request.NoticeUpsertRequest;
-import com.mini.buting.api.chat.dto.response.ChatMessagesResponse;
 import com.mini.buting.api.chat.dto.response.NoticeResponse;
 import com.mini.buting.api.chat.dto.response.NoticeViewResponse;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
@@ -14,10 +13,7 @@ import com.mini.buting.api.chat.repository.NoticeRepository;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.global.exception.BaseException;
-import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.response.BaseResponseStatus;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +27,6 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
-    @PersistenceContext
-    private EntityManager em;
 
     @Transactional
     public NoticeResponse upsertNotice(String roomIdStr, Long senderId, NoticeUpsertRequest request) {
@@ -44,10 +38,10 @@ public class NoticeService {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.CHATROOM_NOT_EXISTS));
 
-        chatRoomService.isLeader(senderId, room);
-
         Member member = memberRepository.findByIdWithDetails(senderId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        chatRoomService.isLeader(senderId, room);
 
         Notice notice = noticeRepository.findById(roomId).orElse(null);
         NoticeResponse response = null;
@@ -105,4 +99,5 @@ public class NoticeService {
             throw new BaseException(BaseResponseStatus.NOTICE_NOT_FOUND);
         }
     }
+
 }
