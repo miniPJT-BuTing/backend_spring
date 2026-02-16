@@ -131,7 +131,8 @@ public class SecurityConfig {
                                         securityProperties.oauth2().endpoint().authorization()
                                 )
                         ))
-                        .redirectionEndpoint(endpoint -> endpoint.baseUri(securityProperties.oauth2().endpoint().redirection()))
+                        .redirectionEndpoint(endpoint -> endpoint
+                                .baseUri(securityProperties.oauth2().endpoint().redirection() + "/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)

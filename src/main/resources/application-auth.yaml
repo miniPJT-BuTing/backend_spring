@@ -6,7 +6,7 @@ spring:
           kakao:
             client-id: ${OAUTH2_REGISTRATION_KAKAO_CLIENT_ID}
             client-secret:  ${OAUTH2_REGISTRATION_KAKAO_CLIENT_SECRET}
-            redirect-uri: "${SECURITY_OAUTH_REDIRECTION_ENDPOINT}"
+            redirect-uri: "{baseUrl}${SECURITY_OAUTH_REDIRECTION_BASE}/{registrationId}"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             client-name: Kakao
@@ -30,7 +30,7 @@ security:
   oauth2:
     endpoint:
       authorization: ${SECURITY_OAUTH_AUTHORIZATION_ENDPOINT}
-      redirection: ${SECURITY_OAUTH_REDIRECTION_ENDPOINT}
+      redirection: ${SECURITY_OAUTH_REDIRECTION_BASE}
     client:
       success-url: ${SECURITY_OAUTH_CLIENT_SUCCESS_URL}
 
