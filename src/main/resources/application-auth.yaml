@@ -32,7 +32,7 @@ security:
       authorization: ${SECURITY_OAUTH_AUTHORIZATION_ENDPOINT}
       redirection: ${SECURITY_OAUTH_REDIRECTION_BASE}
     client:
-      success-url: ${SECURITY_OAUTH_CLIENT_SUCCESS_URL}
+      success-url: ${SECURITY_OAUTH_CLIENT_BASE_URL}${SECURITY_OAUTH_CLIENT_SUCCESS_PATH}
 
   whitelist:
     values:
