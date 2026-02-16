@@ -106,6 +106,10 @@ public class JwtTokenProvider {
      * @implNote TODO: 내부 log 출력을 AOP로 분리하고, 이후 디버깅 최적화를 위해 MCP를 적용할 것
      */
     public Claims parseClaims(String token) {
+        if (!StringUtils.hasText(token)) {
+            throw new BaseException(BaseResponseStatus.AUTHENTICATION_REQUIRED);
+        }
+
         try {
             return getClaims(token);
         } catch (SecurityException | MalformedJwtException | IllegalArgumentException e) {

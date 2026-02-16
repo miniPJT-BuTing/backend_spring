@@ -1,5 +1,7 @@
 package com.mini.buting.global.security.filter;
 
+import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.provider.JwtTokenProvider;
 import com.mini.buting.global.security.service.TokenBlacklistService;
@@ -45,15 +47,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final SecurityProperties securityProperties;
     private final TokenBlacklistService tokenBlacklistService;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+    private final SecurityProperties securityProperties;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @Nonnull FilterChain filterChain) throws ServletException, IOException {
-        // Request Header에서 토큰 추출
+
+        boolean permitAll = isPermitAll(request);
         String token = tokenProvider.getTokenFromRequest(request);
 
         // 토큰이 없으면 인증 객체를 만들지 않고 진행(인가 판단은 AuthorizationFilter가 수행)
@@ -63,19 +66,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            // 블랙리스트/유효성 검증 실패 시 인증 포기(차단은 인가 단계에서 처리)
-            if (!tokenProvider.validateToken(token) || tokenBlacklistService.isBlacklisted(token)) {
-                SecurityContextHolder.clearContext();
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
+            }
+
+            Authentication auth = tokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+            if (permitAll) {
                 filterChain.doFilter(request, response);
                 return;
             }
-
-            Authentication authentication = tokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (Exception e) {
-            SecurityContextHolder.clearContext();
+            throw e;
         }
+    }
 
-        filterChain.doFilter(request, response);
+    /**
+     * WhitelistProperties 기반 AntPath 맵핑 검사
+     */
+    private boolean isPermitAll(HttpServletRequest request) {
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+
+        return securityProperties.whitelist().values().entrySet().stream()
+                .anyMatch(entry ->
+                        entry.getKey().equalsIgnoreCase(method) &&
+                                entry.getValue().stream().anyMatch(pattern -> antPathMatcher.match(pattern, uri))
+                );
     }
 }
