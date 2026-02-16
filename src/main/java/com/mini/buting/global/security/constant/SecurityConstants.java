@@ -47,10 +47,14 @@ public final class SecurityConstants {
         private static final String PREFIX = "auth:";
 
         /**
+         * OAuth2 관련 prefix
+         */
+        public static final String OAUTH2_PREFIX = PREFIX + "oauth2:";
+        public static final String OAUTH2_SIGNUP_PREFIX = OAUTH2_PREFIX + "signup:";
+        /**
          * Refresh Token 저장용 prefix
          */
         public static final String REFRESH_PREFIX = PREFIX + "rt:";
-
         /**
          * 블랙리스트 관련 공통 prefix
          */
