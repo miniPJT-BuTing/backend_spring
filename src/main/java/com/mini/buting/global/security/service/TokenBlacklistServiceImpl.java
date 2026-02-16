@@ -30,12 +30,12 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
      */
     @Override
     public void register(String token) {
-        Claims claims = tokenProvider.parseClaims(token);
+        Claims claims = tokenProvider.parseClaimsAllowedExpired(token);
         long remaining = claims.getExpiration().getTime() - System.currentTimeMillis();
 
-        if (remaining > 0) {
-            redisUtils.setValue(getRedisKey(token), null, Duration.ofMillis(remaining));
-        }
+        if (remaining <= 0) return;
+
+        redisUtils.setValue(getRedisKey(token), "1", Duration.ofMillis(remaining));
     }
 
     /**
