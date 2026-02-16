@@ -17,10 +17,10 @@ import java.util.Map;
  * <p>{@link com.mini.buting.global.security.handler.oauth2.strategy.GuestSignUpSuccessStrategy}에서
  * 이 Principal을 감지하여 추가 정보 입력 플로우로 분기함.</p>
  *
- * @param provider 소셜 제공자
- * @param providerId    제공자 내 사용자 식별자
- * @param email 제공자 이메일
- * @param attributes    원본 OAuth2 attributes
+ * @param provider   소셜 제공자
+ * @param providerId 제공자 내 사용자 식별자
+ * @param email      제공자 이메일
+ * @param attributes 원본 OAuth2 attributes
  */
 public record GuestOAuth2User(
         SocialProvider provider,
@@ -28,6 +28,15 @@ public record GuestOAuth2User(
         String email,
         Map<String, Object> attributes
 ) implements OAuth2User {
+
+    public static GuestOAuth2User of(SocialProvider provider, OAuth2User oAuth2User, OAuth2UserInfo userInfo) {
+        return new GuestOAuth2User(
+                provider,
+                userInfo.getProviderId(),
+                userInfo.getProviderEmail(),
+                oAuth2User.getAttributes()
+        );
+    }
 
     @Override
     public Map<String, Object> getAttributes() {
