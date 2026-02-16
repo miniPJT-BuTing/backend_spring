@@ -41,8 +41,8 @@ public class RedisUtils {
         return valueOperations.get(key);
     }
 
-    public void deleteValue(String key) {
-        redisTemplate.delete(key);
+    public boolean deleteValue(String key) {
+        return redisTemplate.delete(key);
     }
 
     public void addSetValue(String key, Object value) {
