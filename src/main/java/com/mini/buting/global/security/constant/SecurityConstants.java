@@ -27,6 +27,9 @@ public final class SecurityConstants {
          * JWT Claim 내 권한 정보 키값
          */
         public static final String AUTHORITIES_CLAIM = "auth";
+
+        // JWT Claim 내 세션 식별자 키값
+        public static final String SESSION_ID_CLAIM = "session_uuid";
         /**
          * Refresh Token을 저장할 쿠키의 명칭
          */
