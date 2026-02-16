@@ -98,17 +98,6 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 토큰에서 특정 클레임 값 추출
-     *
-     * @param token     JWT
-     * @param claimName 추출할 클레임 키
-     * @return 클레임 값
-     */
-    public String getClaimFromToken(String token, String claimName) {
-        return parseClaims(token).get(claimName, String.class);
-    }
-
-    /**
      * 전달된 토큰을 복화하여 내부 클레임(Payload)을 반환
      *
      * @param token 검증 및 파싱 대상 JWT
@@ -125,6 +114,35 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException e) {
             log.warn("{} JWT token is expired: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
             throw new BaseException(BaseResponseStatus.EXPIRED_JWT_TOKEN);
+        } catch (UnsupportedJwtException e) {
+            log.warn("{} JWT token is unsupported: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
+            throw new BaseException(BaseResponseStatus.UNSUPPORTED_JWT_TOKEN);
+        }
+    }
+
+    /**
+     * <h3>만료된 토큰도 허용하는 Claims 파싱</h3>
+     *
+     * <h5>우선순위</h5>
+     * <ul>
+     *    <li>만료(Expired)는 허용하되, 서명/형식 오류는 즉시 차단</li>
+     * </ul>
+     *
+     * @param token JWT
+     * @return 서명이 유효한 경우 Claims (만료 토큰이면 {@link ExpiredJwtException}의 Claims 반환)
+     */
+    public Claims parseClaimsAllowedExpired(String token) {
+        if (!StringUtils.hasText(token)) {
+            throw new BaseException(BaseResponseStatus.AUTHENTICATION_REQUIRED);
+        }
+
+        try {
+            return getClaims(token);
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        } catch (SecurityException | MalformedJwtException | IllegalArgumentException e) {
+            log.warn("{} Invalid JWT signature or format: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
+            throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
         } catch (UnsupportedJwtException e) {
             log.warn("{} JWT token is unsupported: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
             throw new BaseException(BaseResponseStatus.UNSUPPORTED_JWT_TOKEN);
