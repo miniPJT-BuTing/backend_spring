@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * <h2>쿠키 생성 및 관리 유틸리티</h2>
@@ -50,14 +51,30 @@ public class CookieUtils {
      * @param sameSite 적용할 SameSite 정책 (None, Lax, Strict)
      */
     public void setCookie(HttpServletResponse response, String name, String value, int maxAge, String sameSite) {
-        ResponseCookie cookie = ResponseCookie.from(name, value)
+        var builder = ResponseCookie.from(name, value)
                 .secure(cookieProperties.secure())
                 .sameSite(sameSite)
                 .domain(cookieProperties.domain())
                 .path("/")
                 .maxAge(maxAge)
-                .httpOnly(true)
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+                .httpOnly(true);
+
+        if (StringUtils.hasText(cookieProperties.domain())) {
+            builder.domain(cookieProperties.domain());
+        }
+
+        response.addHeader("Set-Cookie", builder.build().toString());
+    }
+
+    /**
+     * <h3>쿠키 만료(삭제) 처리</h3>
+     * <p>생성 시 적용한 전역 정책(SameSite/Secure/Domain/Path/HttpOnly)을 동일하게 적용해야
+     * 브라우저에서 정상적으로 삭제됨 주의</p>
+     *
+     * @param response HTTP 응답
+     * @param name     쿠키명
+     */
+    public void expireCookie(HttpServletResponse response, String name) {
+        setCookie(response, name, "", 0);
     }
 }
