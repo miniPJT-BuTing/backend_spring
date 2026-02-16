@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -36,23 +37,35 @@ public class SecurityExceptionFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } catch (BaseException e) {
-            // 비즈니스 에외 처리
-            writeLog(e, request);
-            filterResponseUtils.sendErrorResponse(response, e.getStatus());
+            handleBaseException(request, response, e);
         } catch (Exception e) {
-            // 예상치 못한 시스템 예외 처리
-            writeLog(e, request);
-            filterResponseUtils.sendErrorResponse(response, BaseResponseStatus.INTERNAL_SERVER_ERROR);
+            handleUnexpectedException(request, response, e);
         }
     }
 
-    private void writeLog(Exception e, HttpServletRequest request) {
-        String status = (e instanceof BaseException be) ? be.getStatus().toString()
-                : "INTERNAL_SERVER_ERROR";
-        log.warn("{} [{}] URI: {}, Message: {}",
-                Log.LOG_PREFIX,
-                e.getClass().getSimpleName(),
-                request.getRequestURI(),
-                e.getMessage());
+    private void handleBaseException(HttpServletRequest request, HttpServletResponse response, BaseException e) throws IOException {
+        SecurityContextHolder.clearContext();
+
+        if (response.isCommitted()) {
+            log.warn("{} response already committed. method={}, uri={}, status={}", Log.LOG_PREFIX, request.getMethod(), request.getRequestURI(), e.getStatus());
+            return;
+        }
+
+        log.warn("{} method={}, uri={}, status={}, message={}", Log.LOG_PREFIX, request.getMethod(), request.getRequestURI(), e.getStatus(), e.getMessage());
+
+        filterResponseUtils.sendErrorResponse(response, e.getStatus());
+    }
+
+    private void handleUnexpectedException(HttpServletRequest request, HttpServletResponse response, Exception e) throws IOException {
+        SecurityContextHolder.clearContext();
+
+        if (response.isCommitted()) {
+            log.error("{} response already committed. method={}, uri={}", Log.LOG_PREFIX, request.getMethod(), request.getRequestURI(), e);
+            return;
+        }
+
+        log.error("{} method={}, uri={}, message={}", Log.LOG_PREFIX, request.getMethod(), request.getRequestURI(), e.getMessage(), e);
+
+        filterResponseUtils.sendErrorResponse(response, BaseResponseStatus.INTERNAL_SERVER_ERROR);
     }
 }
