@@ -52,10 +52,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                     @Param("domain") String domain);
 
     /**
-     * UUID로 회원 조회
+     * UUID로 회원 조회 (탈퇴 회원 포함)
      */
-    @Query("SELECT m FROM Member m WHERE m.uuid = :uuid AND m.isDeleted = false")
-    Optional<Member> findByUuid(@Param("uuid") String uuid);
+    Optional<Member> findByUuid(String uuid);
+
+    /**
+     * UUID로 회원 조회 (탈퇴 회원 제외)
+     */
+    Optional<Member> findByUuidAndIsDeletedFalse(String uuid);
 
     /**
      * 닉네임으로 회원 검색 (부분 검색 - 친구 찾기용)
