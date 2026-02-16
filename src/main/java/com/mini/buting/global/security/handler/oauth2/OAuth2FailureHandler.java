@@ -2,11 +2,13 @@ package com.mini.buting.global.security.handler.oauth2;
 
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
+import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.security.property.SecurityProperties;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -29,6 +31,7 @@ import java.io.IOException;
  * <li>인가 실패 상태({@code isSuccess=false})와 에러 코드({@code code}) 전달</li>
  * </ul>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2FailureHandler implements AuthenticationFailureHandler {
@@ -47,6 +50,12 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
      */
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+        if (response.isCommitted()) {
+            log.warn("{} OAuth2 failure response already committed. method={}, uri={}",
+                    SecurityConstants.Log.LOG_PREFIX, request.getMethod(), request.getRequestURI());
+            return;
+        }
+
         int errorCode = getErrorCode(exception);
 
         String redirectUri = securityProperties.oauth2().client().successUrl();
@@ -72,8 +81,9 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
      * @return {@link BaseResponseStatus}에 정의된 에러 코드({@code int})
      */
     private int getErrorCode(AuthenticationException exception) {
-        if (exception.getCause() instanceof BaseException baseException) {
-            return baseException.getStatus().getCode();
+        BaseException be = findBaseException(exception);
+        if (be != null) {
+            return be.getStatus().getCode();
         }
 
         if (exception instanceof InternalAuthenticationServiceException) {
@@ -81,5 +91,14 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
         }
 
         return BaseResponseStatus.AUTHENTICATION_FAILED.getCode();
+    }
+
+    private BaseException findBaseException(Throwable t) {
+        for (Throwable cur = t; cur != null; cur = cur.getCause()) {
+            if (cur instanceof BaseException be) {
+                return be;
+            }
+        }
+        return null;
     }
 }
