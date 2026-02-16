@@ -26,6 +26,7 @@ public record GuestOAuth2User(
         SocialProvider provider,
         String providerId,
         String email,
+        String nickname,
         Map<String, Object> attributes
 ) implements OAuth2User {
 
@@ -34,6 +35,7 @@ public record GuestOAuth2User(
                 provider,
                 userInfo.getProviderId(),
                 userInfo.getProviderEmail(),
+                userInfo.getProviderNickname(),
                 oAuth2User.getAttributes()
         );
     }

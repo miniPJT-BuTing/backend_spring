@@ -20,4 +20,8 @@ public interface OAuth2UserInfo {
      * @see com.mini.buting.api.member.domain.SocialProvider
      */
     String getProviderName();
+
+    default String getProviderNickname() {
+        return null;
+    }
 }

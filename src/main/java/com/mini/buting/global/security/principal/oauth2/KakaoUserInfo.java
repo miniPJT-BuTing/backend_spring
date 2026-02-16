@@ -9,13 +9,12 @@ import java.util.Optional;
  * <h2>Kakao 사용자 정보 Parser</h2>
  *
  * <p>Kakao로부터 전달받은 {@code Map} 형태의 사용자 속성을 파싱하여 공통 규격으로 반환함.</p>
- * <
  */
 public record KakaoUserInfo(Map<String, Object> attributes) implements OAuth2UserInfo {
     @Override
     public String getProviderId() {
         Object id = attributes.get(Key.ID);
-        return id != null ? String.valueOf(id) : null;
+        return id == null ? null : String.valueOf(id);
     }
 
     @Override
@@ -30,9 +29,36 @@ public record KakaoUserInfo(Map<String, Object> attributes) implements OAuth2Use
         return SocialProvider.KAKAO.getName();
     }
 
+    @Override
+    public String getProviderNickname() {
+        Object kakaoAccountObj = attributes.get(Key.KAKAO_ACCOUNT);
+        if (kakaoAccountObj instanceof Map<?, ?> kakaoAccount) {
+            Object profileObj = kakaoAccount.get(Key.PROFILE);
+            if (profileObj instanceof Map<?, ?> profile) {
+                Object nicknameObj = profile.get(Key.NICKNAME);
+                if (nicknameObj != null) {
+                    return String.valueOf(nicknameObj);
+                }
+            }
+        }
+
+        Object propsObj = attributes.get(Key.PROPERTIES);
+        if (propsObj instanceof Map<?, ?> props) {
+            Object nicknameObj = props.get(Key.NICKNAME);
+            if (nicknameObj != null) {
+                return String.valueOf(nicknameObj);
+            }
+        }
+
+        return null;
+    }
+
     public KakaoAccount getKakaoAccount() {
         if (attributes.get(Key.KAKAO_ACCOUNT) instanceof Map<?, ?> accountMap) {
-            return new KakaoAccount((Map<String, Object>) accountMap);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> m = (Map<String, Object>) accountMap;
+
+            return new KakaoAccount(m);
         }
         return null;
     }
@@ -43,7 +69,8 @@ public record KakaoUserInfo(Map<String, Object> attributes) implements OAuth2Use
      */
     public record KakaoAccount(Map<String, Object> attributes) {
         public String email() {
-            return String.valueOf(attributes.get(Key.EMAIL));
+            Object email = attributes.get(Key.EMAIL);
+            return email == null ? null : String.valueOf(email);
         }
     }
 
@@ -53,6 +80,9 @@ public record KakaoUserInfo(Map<String, Object> attributes) implements OAuth2Use
     private static final class Key {
         private static final String ID = "id";
         private static final String KAKAO_ACCOUNT = "kakao_account";
+        private static final String PROPERTIES = "properties";
+        private static final String PROFILE = "profile";
+        private static final String NICKNAME = "nickname";
         private static final String EMAIL = "email";
     }
 }
