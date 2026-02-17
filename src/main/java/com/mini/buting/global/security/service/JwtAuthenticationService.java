@@ -18,7 +18,10 @@ import java.util.Arrays;
 
 /**
  * <h2>JWT 기반 인증 객체 생성 서비스</h2>
- * <p>토큰 파싱/회원 조회/Authentication 조립 책임을 담당</p>
+ * <ul>
+ *     <li>검증된 JWT 토큰 정보를 바탕으로 {@link Authentication} 객체를 생성</li>
+ *     <li>토큰 파싱, 회원 존재 여부 확인, 권한 매핑 작업을 수행</li>
+ * </ul>
  */
 @Service
 @RequiredArgsConstructor

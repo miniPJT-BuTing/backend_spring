@@ -20,9 +20,15 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 
 /**
- * <h2>JWT 생성/파싱 전용 Provider</h2>
- *
- * <p>Security 인증을 위한 JWT의 발급, 파싱 및 유효성 검증을 담당</p>
+ * <h2>JWT 생성/파싱 전용 엔진</h2>
+ * <p>JWT 표준 규격에 따라 토큰을 발급하고, 수신된 토큰의 무결성 및 유효성을 검증</p>
+ * <hr/>
+ * <h5>주요 기능</h5>
+ * <ul>
+ *     <li>{@code session_uuid}를 포함한 토큰 세트 생성</li>
+ *     <li>클레임 기반 식별자 추출</li>
+ *     <li>만료된 토큰에 대한 조건부 파싱 기능</li>
+ * </ul>
  */
 @Slf4j
 @Component
@@ -36,14 +42,11 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(securityProperties.jwt().secretKey()));
     }
 
+    // --- Token 발급 ---
+
     /**
-     * 사용자의 식별값과 권한 정보를 바탕으로 Access & Refresh Token 세트 생성
-     * <p>Refresh Token의 경우 권한 클레임을 생략하며,
-     * 로그인 세션마다 고유한 {@code session_uuid}를 생성해 토큰 클레임에 포함함.</p>
-     *
-     * @param subject     토큰의 주체
-     * @param authorities 쉼표(,)로 구분된 사용자 권한 목록(Ex: "ROLE_USER,ROLE_ADMIN")
-     * @return 발급된 {@link JwtToken} 객체 (Grant Type, Access/Refresh Token 포함)
+     * <h3>사용자의 식별값과 권한 정보를 바탕으로 신규 토큰 세트(AT/RT) 생성</h3>
+     * <p>로그인 시점마다 고유한 {@code session_uuid}를 발급하여 멀티 디바이스 세션을 구분함</p>
      */
     public JwtToken generateTokenSet(String subject, String authorities) {
         long now = System.currentTimeMillis();
@@ -88,8 +91,11 @@ public class JwtTokenProvider {
         return builder.compact();
     }
 
+    // --- Token Parsing & Validation
+
     /**
-     * 전달된 토큰을 복화하여 내부 클레임(Payload)을 반환
+     * <h3>토큰 클레임 추출(검증 엄격함)</h3>
+     * <p>만료, 서명 불일치 등 모든 오류에 대해 즉시 예외 발생</p>
      *
      * @param token 검증 및 파싱 대상 JWT
      * @return 파싱된 {@link Claims} 객체
@@ -116,8 +122,9 @@ public class JwtTokenProvider {
     }
 
     /**
-     * <h3>만료된 토큰도 허용하는 Claims 파싱</h3>
-     *
+     * <h3>토큰 클레임 추출(만료 허용)</h3>
+     * <p>로그아웃 처리 등 만료된 토큰의 정보가 필요한 경우 사용</p>
+     * <hr/>
      * <h5>우선순위</h5>
      * <ul>
      *    <li>만료(Expired)는 허용하되, 서명/형식 오류는 즉시 차단</li>
@@ -145,6 +152,21 @@ public class JwtTokenProvider {
     }
 
     /**
+     * 토큰에서 클레임 정보를 파싱하기 위한 내부 헬퍼 메서드
+     * <p>서명 검증을 포함한 순수 JWT 파싱 로직을 담당
+     * 예외의 경우 직접 처리하지 않고, 호출자에게 던져 세부 처리를 위임함.</p>
+     */
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    // --- 식별자(TokenIdentity) 추출 ---
+
+    /**
      * 토큰에서 인증 식별자(subject/session_uuid) 추출
      */
     public TokenIdentity extractTokenIdentity(String token) {
@@ -159,10 +181,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * claims에서 subject/session_uuid를 검증해 구조화함
-     *
-     * @param claims JWT Claims
-     * @return TokenIdentity
+     * claims에서 subject/session_uuid를 검증하여 구조화
      */
     private TokenIdentity toIdentity(Claims claims) {
         String subject = claims.getSubject();
@@ -174,6 +193,8 @@ public class JwtTokenProvider {
 
         return new TokenIdentity(subject, sessionUuid);
     }
+
+    // --- 기타 유틸리티 ---
 
     /**
      * 토큰에서 subject 정보를 추출
@@ -195,19 +216,6 @@ public class JwtTokenProvider {
             log.warn("{} Failed to extract subject: {}", SecurityConstants.Log.LOG_PREFIX, e.getMessage());
             throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
         }
-    }
-
-    /**
-     * 토큰에서 클레임 정보를 파싱하기 위한 내부 헬퍼 메서드
-     * <p>서명 검증을 포함한 순수 JWT 파싱 로직을 담당
-     * 예외의 경우 직접 처리하지 않고, 호출자에게 던져 세부 처리를 위임함.</p>
-     */
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
     }
 
     /**

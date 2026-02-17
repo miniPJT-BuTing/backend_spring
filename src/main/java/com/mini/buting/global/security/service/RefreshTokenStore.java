@@ -10,21 +10,17 @@ import java.time.Duration;
 import java.util.Optional;
 
 /**
- * <h2>RefreshToken Redis 저장소</h2>
+ * <h2>RefreshToken 전용 Redis 저장소</h2>
  * <p>RT 저장/조회/삭제 및 키 규칙을 정의</p>
  */
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenStore {
+
     private final RedisUtils redisUtils;
 
     /**
      * Redis에 RefreshToken 저장
-     *
-     * @param memberUuid   회원 UUID
-     * @param sessionUuid  세션 UUID
-     * @param refreshToken RT 값
-     * @param ttl          만료시간
      */
     public void save(String memberUuid, String sessionUuid, String refreshToken, Duration ttl) {
         redisUtils.setValue(getKey(memberUuid, sessionUuid), refreshToken, ttl);
@@ -32,10 +28,6 @@ public class RefreshTokenStore {
 
     /**
      * Redis에서 RefreshToken 조회
-     *
-     * @param memberUuid  회원 UUID
-     * @param sessionUuid 세션 UUID
-     * @return 저장된 RT(Optional)
      */
     public Optional<String> get(String memberUuid, String sessionUuid) {
         Object value = redisUtils.getValue(getKey(memberUuid, sessionUuid));
@@ -47,9 +39,6 @@ public class RefreshTokenStore {
 
     /**
      * Redis에서 RefreshToken 삭제
-     *
-     * @param memberUuid    회원 UUID
-     * @param sessionUuid   세션 UUID
      */
     public void delete(String memberUuid, String sessionUuid) {
         redisUtils.deleteValue(getKey(memberUuid, sessionUuid));
