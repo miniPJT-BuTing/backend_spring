@@ -7,16 +7,19 @@ import com.mini.buting.global.mail.dto.VerificationCode;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.util.RedisUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * <h2>메일 인증코드 발급/검증 서비스</h2>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailVerificationCodeService {
@@ -25,7 +28,7 @@ public class MailVerificationCodeService {
     private final RedisUtils redisUtils;
 
     /**
-     * 이메일 인증코드를 발급하고 Redis에 저장
+     * 이메일 인증코드를 발급하고 Redis에 해시 형태로 저장
      *
      * @param email    대상 이메일
      * @param mailType 메일 타입
@@ -35,16 +38,27 @@ public class MailVerificationCodeService {
         validateIssueRequest(email, mailType);
 
         String normalizedEmail = normalizedEmail(email);
-        String code = generateNumericCode(MailConstants.Verification.CODE_LENGTH);
-        String redisKey = buildVerificationKey(normalizedEmail, mailType);
+        String cooldownKey = buildCooldownKey(normalizedEmail, mailType);
 
-        redisUtils.setValue(redisKey, code, MailConstants.Verification.EXPIRE_DURATION);
+        boolean acquired = redisUtils.setValueIfAbsent(cooldownKey, "1", MailConstants.Verification.ISSUE_COOLDOWN_DURATION);
+
+        if (!acquired) {
+            throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_COOLDOWN);
+        }
+
+        String plainCode = generateNumericCode(MailConstants.Verification.CODE_LENGTH);
+        String verificationKey = buildVerificationKey(normalizedEmail, mailType);
+        String attemptKey = buildAttemptKey(normalizedEmail, mailType);
+
+        redisUtils.setValue(verificationKey, plainCode, MailConstants.Verification.EXPIRE_DURATION);
+        redisUtils.setValue(cooldownKey, "1", MailConstants.Verification.ISSUE_COOLDOWN_DURATION);
+        redisUtils.deleteValue(attemptKey);
 
         String expiredAt = LocalDateTime.now()
                 .plus(MailConstants.Verification.EXPIRE_DURATION)
                 .format(DateTimeFormatter.ISO_DATE_TIME);
 
-        return VerificationCode.of(code, expiredAt);
+        return VerificationCode.of(plainCode, expiredAt);
     }
 
     /**
@@ -61,18 +75,39 @@ public class MailVerificationCodeService {
             throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
         }
 
-        String redisKey = buildVerificationKey(normalizedEmail(email), mailType);
-        Object saved = redisUtils.getValue(redisKey);
+        String normalizedEmail = normalizedEmail(email);
+        String verificationKey = buildVerificationKey(normalizedEmail, mailType);
+        String attemptKey = buildAttemptKey(normalizedEmail, mailType);
 
-        if (!(saved instanceof String savedCode) || !StringUtils.hasText(savedCode)) {
-            return false;
+        Object savedObj = redisUtils.getValue(verificationKey);
+        if (!(savedObj instanceof String savedHash) || !StringUtils.hasText(savedHash)) {
+            throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_EXPIRED);
         }
 
-        boolean matched = savedCode.equals(inputCode.trim());
+        int currentAttempts = getAttemptCount(attemptKey);
+        if (currentAttempts >= MailConstants.Verification.MAX_VERIFY_ATTEMPTS) {
+            redisUtils.deleteValue(verificationKey);
+            redisUtils.deleteValue(attemptKey);
+            throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_ATTEMPTS_EXCEEDED);
+        }
+
+        boolean matched = savedHash.equals(inputCode.trim());
+
         if (matched) {
-            redisUtils.deleteValue(redisKey);
+            redisUtils.deleteValue(verificationKey);
+            redisUtils.deleteValue(attemptKey);
+            return true;
         }
-        return matched;
+
+        int nextAttempts = currentAttempts + 1;
+        redisUtils.setValue(attemptKey, String.valueOf(nextAttempts), MailConstants.Verification.EXPIRE_DURATION);
+
+        if (nextAttempts >= MailConstants.Verification.MAX_VERIFY_ATTEMPTS) {
+            redisUtils.deleteValue(verificationKey);
+            throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_ATTEMPTS_EXCEEDED);
+        }
+
+        throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_MISMATCH);
     }
 
     // --- Helper Methods ---
@@ -88,13 +123,39 @@ public class MailVerificationCodeService {
 
     /**
      * 인증코드 Redis 키 생성
-     *
-     * @param normalizedEmail
-     * @param mailType
-     * @return
      */
     private String buildVerificationKey(String normalizedEmail, MailType mailType) {
         return MailConstants.Redis.VERIFICATION_CODE_PREFIX + mailType.name() + ":" + normalizedEmail;
+    }
+
+    /**
+     * 인증코드 발급 cooldown Redis 키 생성
+     */
+    private String buildCooldownKey(String normalizedEmail, MailType mailType) {
+        return MailConstants.Redis.VERIFICATION_COOLDOWN_PREFIX + mailType.name() + ":" + normalizedEmail;
+    }
+
+    /**
+     * 인증코드 검증 시도 횟수 Redis 키 생성
+     */
+    private String buildAttemptKey(String normalizedEmail, MailType mailType) {
+        return MailConstants.Redis.VERIFICATION_ATTEMPT_PREFIX + mailType.name() + ":" + normalizedEmail;
+    }
+
+    /**
+     * 검증 시도 횟수 조회
+     */
+    private int getAttemptCount(String attemptKey) {
+        Object value = redisUtils.getValue(attemptKey);
+        if (!(value instanceof String countText) || !StringUtils.hasText(countText)) {
+            return 0;
+        }
+
+        try {
+            return Integer.parseInt(countText);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     /**
@@ -104,7 +165,7 @@ public class MailVerificationCodeService {
      * @return 소문자/trim 처리된 이메일
      */
     private String normalizedEmail(String email) {
-        return email.trim().toLowerCase();
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     /**

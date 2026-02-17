@@ -29,6 +29,12 @@ public final class MailConstants {
         public static final int CODE_LENGTH = 6;
         public static final Duration EXPIRE_DURATION = Duration.ofMinutes(5);
 
+        // 같은 이메일/타입 재발급 쿨다운
+        public static final Duration ISSUE_COOLDOWN_DURATION = Duration.ofSeconds(60);
+
+        // 검증 최대 시도 횟수
+        public static final int MAX_VERIFY_ATTEMPTS = 5;
+
         private Verification() {
         }
     }
@@ -39,6 +45,8 @@ public final class MailConstants {
     public static final class Redis {
         private static final String BASE_PREFIX = "mail:";
         public static final String VERIFICATION_CODE_PREFIX = BASE_PREFIX + "verification:";
+        public static final String VERIFICATION_COOLDOWN_PREFIX = VERIFICATION_CODE_PREFIX + "cooldown:";
+        public static final String VERIFICATION_ATTEMPT_PREFIX = VERIFICATION_CODE_PREFIX + "attempt:";
 
         private Redis() {
         }
