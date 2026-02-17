@@ -2,7 +2,7 @@ package com.mini.buting.api.auth.dto.response;
 
 import com.mini.buting.global.mail.constants.MailConstants;
 import com.mini.buting.global.mail.dto.MailType;
-import com.mini.buting.global.mail.dto.VerificationCode;
+import com.mini.buting.global.mail.dto.verification.VerificationCode;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

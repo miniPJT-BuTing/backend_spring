@@ -3,7 +3,7 @@ package com.mini.buting.global.mail.service;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.mail.constants.MailConstants;
 import com.mini.buting.global.mail.dto.MailType;
-import com.mini.buting.global.mail.dto.VerificationCode;
+import com.mini.buting.global.mail.dto.verification.VerificationCode;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.util.RedisUtils;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,7 @@ package com.mini.buting.global.mail.provider.verification;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.mail.constants.MailConstants;
 import com.mini.buting.global.mail.dto.MailContext;
-import com.mini.buting.global.mail.dto.VerificationCode;
+import com.mini.buting.global.mail.dto.verification.VerificationCode;
 import com.mini.buting.global.mail.provider.MailValueProvider;
 import com.mini.buting.global.property.WebUrlProperties;
 import com.mini.buting.global.response.BaseResponseStatus;

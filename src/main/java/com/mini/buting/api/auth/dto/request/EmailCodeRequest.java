@@ -15,7 +15,7 @@ public record EmailCodeRequest(
         @Email(message = ErrorMessages.INVALID_EMAIL)
         String email,
 
-        @NotBlank(message = ErrorMessages.VERIFICATION_CODE_NOT_FOUND)
+        @NotBlank(message = ErrorMessages.VERIFICATION_TYPE_NOT_FOUND)
         String verificationType
 ) {
 }

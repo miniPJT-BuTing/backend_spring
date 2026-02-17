@@ -1,4 +1,4 @@
-package com.mini.buting.global.mail.dto;
+package com.mini.buting.global.mail.dto.verification;
 
 /**
  * <h2>메일 인증코드 응답 DTO</h2>

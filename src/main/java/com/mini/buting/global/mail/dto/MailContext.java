@@ -1,6 +1,7 @@
 package com.mini.buting.global.mail.dto;
 
 import com.mini.buting.global.mail.constants.MailConstants;
+import com.mini.buting.global.mail.dto.verification.VerificationCode;
 
 import java.util.HashMap;
 import java.util.Map;
