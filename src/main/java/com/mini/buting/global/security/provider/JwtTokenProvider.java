@@ -8,6 +8,7 @@ import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.token.JwtToken;
+import com.mini.buting.global.util.RedisUtils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -37,19 +38,20 @@ public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final SecurityProperties securityProperties;
     private final MemberRepository memberRepository;
+    private final RedisUtils redisUtils;
 
-    public JwtTokenProvider(SecurityProperties securityProperties, MemberRepository memberRepository) {
+    public JwtTokenProvider(SecurityProperties securityProperties, MemberRepository memberRepository, RedisUtils redisUtils) {
         this.securityProperties = securityProperties;
         this.memberRepository = memberRepository;
         // Base64 인코딩된 SecretKey를 디코딩하여 HMAC-SHA 키 생성
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(securityProperties.jwt().secretKey()));
+        this.redisUtils = redisUtils;
     }
 
     /**
      * 사용자의 식별값과 권한 정보를 바탕으로 Access & Refresh Token 세트 생성
-     * <p>Refresh Token의 경우 권한 클레임을 생략</p>
-     * <p>
-     * 고유 sessionID를 생성하는 이유: 현재 redis RT키로 memberid만을 사용 중인데,
+     * <p>Refresh Token의 경우 권한 클레임을 생략하며,
+     * 로그인 세션마다 고유한 {@code session_uuid}를 생성해 토큰 클레임에 포함함.</p>
      *
      * @param subject     토큰의 주체
      * @param authorities 쉼표(,)로 구분된 사용자 권한 목록(Ex: "ROLE_USER,ROLE_ADMIN")
@@ -69,6 +71,8 @@ public class JwtTokenProvider {
         // RefreshToken 생성
         Date refreshExpirationDate = new Date(now + securityProperties.jwt().expireTime().refresh().toMillis());
         String refreshToken = generateToken(subject, null, sessionUuid, issuedAt, refreshExpirationDate);
+        String redisKey = SecurityConstants.Redis.REFRESH_PREFIX + subject + ":" + sessionUuid;
+        redisUtils.setValue(redisKey, refreshToken, securityProperties.jwt().expireTime().refresh());
 
         return JwtToken.of(SecurityConstants.Token.GRANT_TYPE.trim(), accessToken, refreshToken);
     }
