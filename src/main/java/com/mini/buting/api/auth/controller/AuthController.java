@@ -32,7 +32,7 @@ public class AuthController {
     @Operation(summary = "로그아웃 API", description = "기존에 사용하던 AT/RT를 무효화")
     @PostMapping("/logout")
     public BaseResponse<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        // TODO: 로그아웃 서비스 로직 호출
+        authTokenService.logout(request, response);
         return BaseResponse.onSuccess();
     }
 
