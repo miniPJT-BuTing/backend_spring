@@ -8,11 +8,11 @@ import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.provider.JwtTokenProvider;
+import com.mini.buting.global.security.service.RefreshTokenStore;
 import com.mini.buting.global.security.service.TokenBlacklistService;
 import com.mini.buting.global.security.token.JwtToken;
+import com.mini.buting.global.security.token.TokenIdentity;
 import com.mini.buting.global.util.CookieUtils;
-import com.mini.buting.global.util.RedisUtils;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 public class AuthTokenServiceImpl implements AuthTokenService {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisUtils redisUtils;
+    private final RefreshTokenStore refreshTokenStore;
     private final TokenBlacklistService tokenBlacklistService;
     private final CookieUtils cookieUtils;
     private final SecurityProperties securityProperties;
@@ -50,23 +51,10 @@ public class AuthTokenServiceImpl implements AuthTokenService {
             throw new BaseException(BaseResponseStatus.AUTHENTICATION_REQUIRED);
         }
 
-        Claims claims = jwtTokenProvider.parseClaimsAllowedExpired(accessToken);
+        TokenIdentity identity = jwtTokenProvider.extractTokenIdentityAllowedExpired(accessToken);
 
-        String memberUuid = claims.getSubject();
-        String sessionUuid = claims.get(SecurityConstants.Token.SESSION_ID_CLAIM, String.class);
-
-        if (!StringUtils.hasText(sessionUuid) || !StringUtils.hasText(memberUuid)) {
-            throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
-        }
-
-        // RT 삭제(다중 기기 중 현재 기기만 타겟팅)
-        String redisKey = SecurityConstants.Redis.REFRESH_PREFIX + memberUuid + ":" + sessionUuid;
-        redisUtils.deleteValue(redisKey);
-
-        // AT 블랙리스트 등록 (TTL=남은 만료 시간)
+        refreshTokenStore.delete(identity.subject(), identity.sessionUuid());
         tokenBlacklistService.register(accessToken);
-
-        // RT 쿠키 만료
         cookieUtils.expireCookie(response, SecurityConstants.Token.REFRESH_COOKIE_NAME);
     }
 
@@ -77,7 +65,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        JwtToken jwtToken = jwtTokenProvider.generateTokenSet(memberUuid, authorities);
+        JwtToken jwtToken = issueAndStoreTokenSet(memberUuid, authorities);
         // response.addHeader(HttpHeaders.AUTHORIZATION, SecurityConstants.Token.GRANT_TYPE + jwtToken.accessToken());
         writeRefreshCookie(response, jwtToken.refreshToken());
     }
@@ -100,44 +88,43 @@ public class AuthTokenServiceImpl implements AuthTokenService {
             throw new BaseException(BaseResponseStatus.AUTHENTICATION_REQUIRED);
         }
 
-        Claims claims = jwtTokenProvider.parseClaims(refreshToken);
+        TokenIdentity identity = jwtTokenProvider.extractTokenIdentity(refreshToken);
+        String saved = refreshTokenStore.get(identity.subject(), identity.sessionUuid())
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN));
 
-        String memberUuid = claims.getSubject();
-        String sessionUuid = claims.get(SecurityConstants.Token.SESSION_ID_CLAIM, String.class);
-
-        if (!StringUtils.hasText(memberUuid) || !StringUtils.hasText(sessionUuid)) {
-            throw new BaseException(BaseResponseStatus.INVALID_TOKEN_CLAIM);
-        }
-
-        // Redis 저장 RT와 일치 여부 검증
-        String redisKey = SecurityConstants.Redis.REFRESH_PREFIX + memberUuid + ":" + sessionUuid;
-        Object saveTokenObj = redisUtils.getValue(redisKey);
-
-        if (!(saveTokenObj instanceof String savedToken) || !StringUtils.hasText(savedToken)) {
+        if (!refreshToken.equals(saved)) {
+            refreshTokenStore.delete(identity.subject(), identity.sessionUuid());
             throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
         }
 
-        if (!refreshToken.equals(savedToken)) {
-            redisUtils.deleteValue(redisKey);
-            throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
-        }
-
-        var member = memberRepository.findByUuid(memberUuid)
+        var member = memberRepository.findByUuid(identity.subject())
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
         if (Boolean.TRUE.equals(member.getIsDeleted())) {
+            refreshTokenStore.delete(identity.subject(), identity.sessionUuid());
             throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
         }
 
-        // RT 회전(rotation) 및 새 AT/RT 발급
-        redisUtils.deleteValue(redisKey);
-        JwtToken reissued = jwtTokenProvider.generateTokenSet(memberUuid, member.getRole().getName());
+        refreshTokenStore.delete(identity.subject(), identity.sessionUuid());
 
-        response.setHeader(
-                HttpHeaders.AUTHORIZATION,
-                SecurityConstants.Token.GRANT_TYPE + reissued.accessToken()
-        );
+        JwtToken reissued = issueAndStoreTokenSet(member.getUuid(), member.getRole().getName());
+        writeAccessHeader(response, reissued.accessToken());
         writeRefreshCookie(response, reissued.refreshToken());
+    }
+
+    private JwtToken issueAndStoreTokenSet(String memberUuid, String authorities) {
+        JwtToken jwtToken = jwtTokenProvider.generateTokenSet(memberUuid, authorities);
+        TokenIdentity refreshIdentity = jwtTokenProvider.extractTokenIdentity(jwtToken.refreshToken());
+
+        Duration refreshTtl = securityProperties.jwt().expireTime().refresh();
+        refreshTokenStore.save(
+                refreshIdentity.subject(),
+                refreshIdentity.sessionUuid(),
+                jwtToken.refreshToken(),
+                refreshTtl
+        );
+
+        return jwtToken;
     }
 
     private void writeRefreshCookie(HttpServletResponse response, String refreshToken) {
@@ -147,5 +134,9 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                 refreshToken,
                 (int) securityProperties.jwt().expireTime().refresh().getSeconds()
         );
+    }
+
+    private void writeAccessHeader(HttpServletResponse response, String accessToken) {
+        response.setHeader(HttpHeaders.AUTHORIZATION, SecurityConstants.Token.GRANT_TYPE + accessToken);
     }
 }
