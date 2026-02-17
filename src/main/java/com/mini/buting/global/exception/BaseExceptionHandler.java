@@ -74,24 +74,41 @@ public class BaseExceptionHandler {
     }
 
     private void writeLog(BaseResponseStatus status, Exception e) {
+        int httpStatus = status.getHttpStatusCode().value();
         int code = status.getHttpStatusCode().value();
-        String message = String.format("[%s] Status: %s | Message: %s",
-                e.getClass().getSimpleName(), status, status.getMessage());
-        if (code >= 500) {
+        String message = String.format(
+                "[%s] http=%d, code=%d, status=%s, message=%s",
+                e.getClass().getSimpleName(),
+                httpStatus,
+                status.getCode(),
+                status.name(),
+                status.getMessage());
+
+        if (status.getHttpStatusCode().is5xxServerError()) {
             log.error(message, e);
             return;
         }
+
         log.warn(message);
     }
 
     private void writeLog(BaseResponseStatus status, Exception e, String customMessage) {
-        int code = status.getHttpStatusCode().value();
-        String message = String.format("[%s] Status: %s | CustomMessage: %s",
-                e.getClass().getSimpleName(), status, customMessage);
-        if (code >= 500) {
+        int httpStatus = status.getHttpStatusCode().value();
+
+        String message = String.format(
+                "[%s] http: %d, code=%d, status=%s, customMessage=%s",
+                e.getClass().getSimpleName(),
+                httpStatus,
+                status.getCode(),
+                status.getCode(),
+                customMessage
+        );
+
+        if (status.getHttpStatusCode().is5xxServerError()) {
             log.error(message, e);
             return;
         }
+
         log.warn(message);
     }
 }
