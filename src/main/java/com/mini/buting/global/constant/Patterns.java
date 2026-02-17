@@ -40,6 +40,13 @@ public final class Patterns {
      */
     public static final String NO_WHITESPACE = "^(?=\\s*\\S).*$";
 
+    /**
+     * <h3>메일 도메인 정규식 상수</h3>
+     * <p>{@code {{key}}} 형태의 메일 템플릿 플레이스 홀더를 매칭</p>
+     * <p>{@code key} 허용 문자: 영문 대소문자, 숫자</p>
+     */
+    public static final Pattern MAIL_TEMPLATE_PLACEHOLDER = Pattern.compile(("\\{\\{([a-zA-Z0-9]+)}}"));
+
     private Patterns() {
     }
 }

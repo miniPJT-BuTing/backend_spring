@@ -144,8 +144,13 @@ public enum BaseResponseStatus {
     VOTE_NOT_AVAILABLE(HttpStatus.FORBIDDEN, false, 5010, "투표가 불가능합니다."),
     VOTE_OPTION_REQUIRED(HttpStatus.BAD_REQUEST, false, 5011, "옵션을 하나 이상 선택해야합니다."),
     VOTE_NOT_MULTIPLE(HttpStatus.BAD_REQUEST, false, 5012, "단일 투표에서 중복 투표는 불가능합니다."),
-    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다.");
+    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다."),
 
+    /**
+     * 8000: SMTP(메일) 관련 에러
+     */
+    UNSUPPORTED_MAIL_TYPE(HttpStatus.BAD_REQUEST, false, 8000, "지원하지 않는 메일 타입입니다."),
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 8500, "메일 발송에 실패했습니다.");
 
     private final HttpStatusCode httpStatusCode;
     private final boolean isSuccess;
