@@ -20,7 +20,7 @@ public class AccountController {
     // TODO: 기존 마이페이지 API 이쪽으로 다 옮기기
 
     @Operation(summary = "회원탈퇴 API", description = "기존 사용자를 비활성화")
-    @DeleteMapping("/me")
+    @DeleteMapping()
     public BaseResponse<Void> withDraw(
             HttpServletRequest request, HttpServletResponse response,
             @AuthenticationPrincipal AuthUser authUser) {
