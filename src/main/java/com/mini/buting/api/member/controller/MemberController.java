@@ -2,7 +2,7 @@ package com.mini.buting.api.member.controller;
 
 import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
-import com.mini.buting.api.member.dto.SignUpRequestDto;
+import com.mini.buting.api.member.dto.request.SignUpRequest;
 import com.mini.buting.api.member.service.MemberService;
 import com.mini.buting.global.constant.ErrorMessages;
 import com.mini.buting.global.constant.Patterns;
@@ -78,7 +78,7 @@ public class MemberController {
      */
     @Operation(summary = "회원가입 API", description = "신규 사용자를 등록")
     @PostMapping()
-    public BaseResponse<Void> signUp(@Valid @RequestBody SignUpRequestDto requestDto, HttpServletResponse response) {
+    public BaseResponse<Void> signUp(@Valid @RequestBody SignUpRequest requestDto, HttpServletResponse response) {
         // TODO: 회원가입 서비스 로직 호출
         return BaseResponse.onSuccess();
     }
