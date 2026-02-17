@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 /**
@@ -18,13 +19,22 @@ import java.util.regex.Matcher;
  */
 @Service
 public class MailTemplateService {
+    private final Map<String, String> templateCache = new ConcurrentHashMap<>();
 
     public String render(MailType mailType, Map<String, Object> variables) {
-        String template = loadTemplate(mailType.getTemplatePath());
+        String template = getCachedTemplate(mailType.getTemplatePath());
         return replaceVariables(template, variables);
     }
 
     // --- Helper Methods ---
+
+    /**
+     * 템플릿 캐시에서 조회하고, 없으면 로드 후 캐싱 처리
+     */
+    private String getCachedTemplate(String templatePath) {
+        return templateCache.computeIfAbsent(templatePath, this::loadTemplate);
+    }
+
     private Resource loadTemplateResource(String templatePath) {
         return new ClassPathResource(templatePath);
     }
