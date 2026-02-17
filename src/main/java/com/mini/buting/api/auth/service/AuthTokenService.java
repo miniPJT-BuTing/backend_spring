@@ -8,4 +8,6 @@ public interface AuthTokenService {
     public void logout(HttpServletRequest request, HttpServletResponse response);
 
     public void issueJwt(AuthUser authUser, HttpServletResponse response);
+
+    public void refreshToken(HttpServletResponse response, String refreshToken);
 }
