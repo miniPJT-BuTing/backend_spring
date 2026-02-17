@@ -1,10 +1,10 @@
 package com.mini.buting.global.security.handler.oauth2.strategy;
 
 import com.mini.buting.api.auth.dto.response.OAuth2LoginResponse;
+import com.mini.buting.api.auth.service.AuthTokenService;
 import com.mini.buting.global.security.handler.oauth2.OAuth2SuccessHandlerStrategy;
 import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.property.SecurityProperties;
-import com.mini.buting.global.security.service.TokenAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.io.IOException;
  * <hr/>
  * <h5>동작 방식</h5>
  * <ol>
- *     <li>{@link TokenAuthService}를 통해 JWT(Access/Refresh) 발급</li>
+ *     <li>{@link AuthTokenService}를 통해 JWT(Access/Refresh) 발급</li>
  *     <li>RefreshToken은 HttpOnly Cookie로 저장</li>
  *     <li>클라이언트 success URL로 리다이렉트</li>
  * </ol>
@@ -38,7 +38,7 @@ import java.io.IOException;
 public class MemberLoginSuccessStrategy implements OAuth2SuccessHandlerStrategy {
 
     private final SecurityProperties securityProperties;
-    private final TokenAuthService tokenAuthService;
+    private final AuthTokenService authTokenService;
 
     @Override
     public boolean supports(Authentication authentication, HttpServletRequest request) {
@@ -50,7 +50,7 @@ public class MemberLoginSuccessStrategy implements OAuth2SuccessHandlerStrategy 
                        HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
         AuthUser user = (AuthUser) authentication.getPrincipal();
-        tokenAuthService.issueJwt(user, response);
+        authTokenService.issueJwt(user, response);
 
         String redirectUri = securityProperties.oauth2().client().successUrl();
         String query = OAuth2LoginResponse.successLogin().toQueryParams();
