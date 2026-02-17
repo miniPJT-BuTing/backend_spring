@@ -1,5 +1,6 @@
 package com.mini.buting.api.auth.controller;
 
+import com.mini.buting.api.auth.service.AuthTokenService;
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.security.constant.SecurityConstants;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,13 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/auth")
 @Tag(name = "Auth", description = "사용자 인증/인가 관련 API")
 public class AuthController {
+    private final AuthTokenService authTokenService;
 
     @Operation(summary = "JWT 재발급 API", description = "RT로 만료된 AT를 새로 발급")
     @PostMapping("/reissue")
     public BaseResponse<Void> refresh(
             @CookieValue(value = SecurityConstants.Token.REFRESH_COOKIE_NAME) String refreshToken,
             HttpServletResponse response) {
-        // TODO: 토큰 재발급 서비스 로직 호출
+        authTokenService.refreshToken(response, refreshToken);
         return BaseResponse.onSuccess();
     }
 
