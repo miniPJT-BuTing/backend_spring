@@ -1,11 +1,13 @@
 package com.mini.buting.api.auth.controller;
 
 import com.mini.buting.api.auth.dto.request.EmailCodeRequest;
+import com.mini.buting.api.auth.dto.request.EmailVerifyRequest;
 import com.mini.buting.api.auth.dto.response.EmailCodeResponse;
+import com.mini.buting.api.auth.dto.response.EmailVerifyResponse;
 import com.mini.buting.api.auth.service.AuthTokenService;
 import com.mini.buting.global.mail.dto.MailContext;
 import com.mini.buting.global.mail.dto.MailType;
-import com.mini.buting.global.mail.dto.VerificationCode;
+import com.mini.buting.global.mail.dto.verification.VerificationCode;
 import com.mini.buting.global.mail.service.MailSendService;
 import com.mini.buting.global.mail.service.MailVerificationCodeService;
 import com.mini.buting.global.response.BaseResponse;
@@ -55,6 +57,20 @@ public class AuthController {
         mailSendService.sendMail(requestDto.email(), mailType, context);
 
         return BaseResponse.onSuccess(EmailCodeResponse.of(mailType, verificationCode, LocalDateTime.now()));
+    }
+
+    @Operation(summary = "이메일 인증코드 검증 API", description = """
+            발급된 이메일 인증코드를 검증(모든 이메일 코드 검증 요청에 공통으로 사용).
+            
+            본 API는 시도 횟수를 차감하므로 멱등하지 않음을 주의(동일 요청을 반복 호출해도 같은 결과가 보장되지 않음).
+            
+            인증 성공 시 코드는 즉시 만료(1회성) 처리됨.
+            """)
+    @PutMapping("/email-verifications")
+    public BaseResponse<EmailVerifyResponse> verifyEmailCode(@Valid @RequestBody EmailVerifyRequest requestDto) {
+        MailType mailType = MailType.from(requestDto.verificationType());
+        boolean verified = mailVerificationCodeService.verifyCode(requestDto.email(), mailType, requestDto.code());
+        return BaseResponse.onSuccess(EmailVerifyResponse.of(mailType, verified));
     }
 
 }
