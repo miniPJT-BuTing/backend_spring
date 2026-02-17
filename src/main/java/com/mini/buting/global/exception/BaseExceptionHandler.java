@@ -66,7 +66,7 @@ public class BaseExceptionHandler {
     public ResponseEntity<BaseResponse<Void>> handleIllegalState(IllegalStateException ex) {
         String msg = ex.getMessage();
         if (msg != null && msg.contains("exceeds its maximum permitted size")) {
-            log.error("Multipart size exceeded (IllegalState): {}", msg);
+            log.warn("Multipart size exceeded (IllegalState): {}", msg);
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                     .body(BaseResponse.onFailure(BaseResponseStatus.PAYLOAD_TOO_LARGE));
         }
@@ -74,12 +74,24 @@ public class BaseExceptionHandler {
     }
 
     private void writeLog(BaseResponseStatus status, Exception e) {
-        log.error("[{}] Status: {} | Message: {}",
-                e.getClass().getSimpleName(), status, status.getMessage(), e);
+        int code = status.getHttpStatusCode().value();
+        String message = String.format("[%s] Status: %s | Message: %s",
+                e.getClass().getSimpleName(), status, status.getMessage());
+        if (code >= 500) {
+            log.error(message, e);
+            return;
+        }
+        log.warn(message);
     }
 
     private void writeLog(BaseResponseStatus status, Exception e, String customMessage) {
-        log.error("[{}] Status: {} | CustomMessage: {}",
+        int code = status.getHttpStatusCode().value();
+        String message = String.format("[%s] Status: %s | CustomMessage: %s",
                 e.getClass().getSimpleName(), status, customMessage);
+        if (code >= 500) {
+            log.error(message, e);
+            return;
+        }
+        log.warn(message);
     }
 }
