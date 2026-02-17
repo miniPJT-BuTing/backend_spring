@@ -1,14 +1,11 @@
 package com.mini.buting.global.security.provider;
 
-import com.mini.buting.api.member.domain.Member;
-import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.security.constant.SecurityConstants;
-import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.token.JwtToken;
-import com.mini.buting.global.util.RedisUtils;
+import com.mini.buting.global.security.token.TokenIdentity;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,20 +13,15 @@ import io.jsonwebtoken.security.SecurityException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 
 /**
- * <h2>JWT Token Provider</h2>
+ * <h2>JWT 생성/파싱 전용 Provider</h2>
+ *
  * <p>Security 인증을 위한 JWT의 발급, 파싱 및 유효성 검증을 담당</p>
  */
 @Slf4j
@@ -37,15 +29,11 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final SecurityProperties securityProperties;
-    private final MemberRepository memberRepository;
-    private final RedisUtils redisUtils;
 
-    public JwtTokenProvider(SecurityProperties securityProperties, MemberRepository memberRepository, RedisUtils redisUtils) {
+    public JwtTokenProvider(SecurityProperties securityProperties) {
         this.securityProperties = securityProperties;
-        this.memberRepository = memberRepository;
         // Base64 인코딩된 SecretKey를 디코딩하여 HMAC-SHA 키 생성
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(securityProperties.jwt().secretKey()));
-        this.redisUtils = redisUtils;
     }
 
     /**
@@ -65,14 +53,12 @@ public class JwtTokenProvider {
         String sessionUuid = java.util.UUID.randomUUID().toString();
 
         // AccessToken 생성
-        Date accessExpirationDate = new Date(now + securityProperties.jwt().expireTime().access().toMillis());
-        String accessToken = generateToken(subject, authorities, sessionUuid, issuedAt, accessExpirationDate);
+        Date accessExp = new Date(now + securityProperties.jwt().expireTime().access().toMillis());
+        String accessToken = generateToken(subject, authorities, sessionUuid, issuedAt, accessExp);
 
         // RefreshToken 생성
-        Date refreshExpirationDate = new Date(now + securityProperties.jwt().expireTime().refresh().toMillis());
-        String refreshToken = generateToken(subject, null, sessionUuid, issuedAt, refreshExpirationDate);
-        String redisKey = SecurityConstants.Redis.REFRESH_PREFIX + subject + ":" + sessionUuid;
-        redisUtils.setValue(redisKey, refreshToken, securityProperties.jwt().expireTime().refresh());
+        Date refreshExp = new Date(now + securityProperties.jwt().expireTime().refresh().toMillis());
+        String refreshToken = generateToken(subject, null, sessionUuid, issuedAt, refreshExp);
 
         return JwtToken.of(SecurityConstants.Token.GRANT_TYPE.trim(), accessToken, refreshToken);
     }
@@ -159,25 +145,34 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 토큰의 유효성을 boolean 값으로 반환
-     * <p>필터 계층에서 인증 여부 판단을 위해 호출됨</p>
-     *
-     * @param token 검증할 JWT
-     * @return 유효할 경우 {@code true}, 그렇지 않다면 {@code false}
-     * @implNote TODO: 필터 계층에서 내부 헬퍼 메소드로 옮겨도 될 듯 함.
-     * @see com.mini.buting.global.security.filter.JwtAuthenticationFilter
+     * 토큰에서 인증 식별자(subject/session_uuid) 추출
      */
-    public boolean validateToken(String token) {
-        if (!StringUtils.hasText(token)) {
-            return false;
+    public TokenIdentity extractTokenIdentity(String token) {
+        return toIdentity(parseClaims(token));
+    }
+
+    /**
+     * 만료된 토큰도 허용하여 인증 식별자 추출
+     */
+    public TokenIdentity extractTokenIdentityAllowedExpired(String token) {
+        return toIdentity(parseClaimsAllowedExpired(token));
+    }
+
+    /**
+     * claims에서 subject/session_uuid를 검증해 구조화함
+     *
+     * @param claims JWT Claims
+     * @return TokenIdentity
+     */
+    private TokenIdentity toIdentity(Claims claims) {
+        String subject = claims.getSubject();
+        String sessionUuid = claims.get(SecurityConstants.Token.SESSION_ID_CLAIM, String.class);
+
+        if (!StringUtils.hasText(subject) || !StringUtils.hasText(sessionUuid)) {
+            throw new BaseException(BaseResponseStatus.INVALID_TOKEN_CLAIM);
         }
 
-        try {
-            parseClaims(token);
-            return true;
-        } catch (BaseException e) {
-            return false;
-        }
+        return new TokenIdentity(subject, sessionUuid);
     }
 
     /**
@@ -227,51 +222,13 @@ public class JwtTokenProvider {
     }
 
     /**
-     * <h3>JWT 토큰 기반 시큐리티 인증 객체 생성</h3>
-     *
-     * <p>토큰의 클레임에서 권한과 식별자를 추출한 뒤, DB 조회를 통해 최신 사용자 상태를 반영한 {@link AuthUser}를 생성.
-     * 이 과정에서 사용자의 실제 PK를 인증 객체에 바인딩하여 이후 비즈니스 로직에서의 효율성을 확보.</p>
-     * <hr/>
-     * <h5>동작</h5>
-     * <ol>
-     *     <li>토큰 파싱 및 Claims 추출({@link #parseClaims(String)})</li>
-     *     <li>권한 클레임({@code auth}) 검증 및 {@link GrantedAuthority} 변환</li>
-     *     <li>subject({@code sub=memberUuid}) 기반으로 회원 조회</li>
-     *     <li>탈퇴 회원({@code is_deleted=true})이면 인증 실패로 처리</li>
-     *     <li>{@link AuthUser#from(Member)}로 principal 생성 후
-     *          {@link UsernamePasswordAuthenticationToken} 반환</li>
-     * </ol>
-     *
-     * @param token 검증된 JWT 토큰
-     * @return SecurityContext에 저장될 인증 객체
-     * @throws BaseException 권한 클레임 누락({@code INVALID_TOKEN_CLAIM}),
-     *                       존재하지 않는 사용자({@code MEMBER_NOT_FOUND}),
-     *                       탈퇴 회원 접근({@code INVALID_JWT_TOKEN})인 경우 발생
+     * 토큰에서 권한 클레임 문자열 추출
      */
-    public Authentication getAuthentication(String token) {
-        Claims claims = parseClaims(token);
-
-        if (claims.get(SecurityConstants.Token.AUTHORITIES_CLAIM) == null) {
+    public String extractAuthorities(Claims claims) {
+        Object auth = claims.get(SecurityConstants.Token.AUTHORITIES_CLAIM);
+        if (auth == null) {
             throw new BaseException(BaseResponseStatus.INVALID_TOKEN_CLAIM);
         }
-
-        // 토큰의 권한 정보(auth) 추출
-        Collection<? extends GrantedAuthority> authorities = Arrays
-                .stream(claims.get(SecurityConstants.Token.AUTHORITIES_CLAIM).toString().split(","))
-                .map(SimpleGrantedAuthority::new).toList();
-
-        // 토큰 주체(sub) 추출
-        String memberUuid = claims.getSubject();
-
-        // DB 조회를 통해 principal 생성
-        var member = memberRepository.findByUuid(memberUuid)
-                .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
-
-        if (Boolean.TRUE.equals(member.getIsDeleted())) {
-            throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
-        }
-
-        AuthUser principal = AuthUser.from(member);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        return auth.toString();
     }
 }

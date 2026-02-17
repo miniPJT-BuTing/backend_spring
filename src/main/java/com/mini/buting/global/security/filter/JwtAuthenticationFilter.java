@@ -4,6 +4,7 @@ import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.security.property.SecurityProperties;
 import com.mini.buting.global.security.provider.JwtTokenProvider;
+import com.mini.buting.global.security.service.JwtAuthenticationService;
 import com.mini.buting.global.security.service.TokenBlacklistService;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
@@ -52,9 +53,10 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final JwtAuthenticationService jwtAuthenticationService;
     private final TokenBlacklistService tokenBlacklistService;
-    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
     private final SecurityProperties securityProperties;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -75,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new BaseException(BaseResponseStatus.INVALID_JWT_TOKEN);
             }
 
-            Authentication auth = tokenProvider.getAuthentication(token);
+            Authentication auth = jwtAuthenticationService.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);
         } catch (Exception e) {
