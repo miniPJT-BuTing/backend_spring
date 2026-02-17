@@ -1,5 +1,6 @@
 package com.mini.buting.global.security.config;
 
+import com.mini.buting.global.property.WebUrlProperties;
 import com.mini.buting.global.security.config.oauth2.OAuth2SelectAccountRequestResolver;
 import com.mini.buting.global.security.filter.JwtAuthenticationFilter;
 import com.mini.buting.global.security.filter.SecurityExceptionFilter;
@@ -47,7 +48,7 @@ import java.util.Locale;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties({SecurityProperties.class})
+@EnableConfigurationProperties({SecurityProperties.class, WebUrlProperties.class})
 public class SecurityConfig {
 
     /* properties */

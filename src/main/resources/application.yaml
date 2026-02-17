@@ -72,6 +72,11 @@ spring:
           starttls:
             enable: true
 
+app:
+  web-url:
+    main: ${APP_WEB_URL_MAIN}
+    logo: ${APP_WEB_URL_LOGO}
+
 rabbitmq:
   chat-queue:
     name: "chat.queue"
