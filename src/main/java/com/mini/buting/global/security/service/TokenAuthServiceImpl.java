@@ -8,7 +8,6 @@ import com.mini.buting.global.security.token.JwtToken;
 import com.mini.buting.global.util.CookieUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
