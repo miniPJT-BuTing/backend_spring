@@ -18,22 +18,14 @@ public final class Patterns {
      * @implNote TODO: 학교 전용 도메인(ac.kr 등) 검증 추가가 필요할 수 있음.
      */
     public static final Pattern SIMPLE_EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+
     /**
      * <h3>닉네임 형식 검증 문자열</h3>
      * <p>규칙: 한글, 영문 대소문자, 숫자 포함 2~10자 이내</p>
-     *
-     * @implNote TODO: 닉네임 규칙에 맞게 설정 필요
      */
     public static final String NICKNAME_REGEX = "^[0-9A-Za-z가-힣]{2,10}$";
     public static final Pattern NICKNAME_PATTERN = Pattern.compile(NICKNAME_REGEX);
-    /**
-     * <h2>비밀번호 형식 검증 문자열</h2>
-     * <p>규칙: 8~21자, 영문 대문자, 소문자, 숫자, 특수문자(/!@$~)를 각각 최소 1개 이상 포함</p>
-     *
-     * @implNote TODO: 비밀번호 규칙에 맞게 설정 필요
-     */
-    public static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[\\/!@$~])[A-Za-z\\d\\/!@$~]{8,21}$";
-    public static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
+
     /**
      * <h3>공백 여부 검증 문자열</h3>
      * <p>규칙: 공백만으로 이루어지지 않은 최소 1자 이상의 유의미한 문자열</p>
@@ -41,9 +33,20 @@ public final class Patterns {
     public static final String NO_WHITESPACE = "^(?=\\s*\\S).*$";
 
     /**
-     * <h3>메일 도메인 정규식 상수</h3>
-     * <p>{@code {{key}}} 형태의 메일 템플릿 플레이스 홀더를 매칭</p>
-     * <p>{@code key} 허용 문자: 영문 대소문자, 숫자</p>
+     * <h3>가입 토큰(UUID) 검증 문자열</h3>
+     * <p>규칙: RFC4122 UUID 표준 포맷</p>
+     */
+    public static final String SIGN_UP_TOKEN_REGEX =  "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
+
+    /**
+     * <h3>자기소개(bio) 검증 문자열</h3>
+     * <p>규칙: null 허용(선택값), 입력 시 1~255자, 공백만 입력 불가</p>
+     */
+    public static final String BIO_REGEX = "^(?!\\s*$).{1,255}$";
+
+    /**
+     * <h3>메일 템플릿 플레이스 홀더</h3>
+     * <p>{@code {{key}}} 형태를 매칭하며 key는 영문/숫자 허용</p>
      */
     public static final Pattern MAIL_TEMPLATE_PLACEHOLDER = Pattern.compile(("\\{\\{([a-zA-Z0-9]+)}}"));
 
