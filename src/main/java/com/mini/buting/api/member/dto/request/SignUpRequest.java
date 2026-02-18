@@ -1,6 +1,5 @@
 package com.mini.buting.api.member.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.mini.buting.api.member.domain.Gender;
 import com.mini.buting.api.member.domain.MbtiType;
 import com.mini.buting.global.constant.ErrorMessages;
@@ -9,24 +8,25 @@ import jakarta.validation.constraints.*;
 
 /**
  * <h2>회원가입 완료 요청</h2>
- * <p>OAuth2 최초 로그인 이후, 추가 프로필 입력값만 받아 회원 생성을 완료</p>
+ * <p>OAuth2 최초 로그인 이후, 서비스 이용에 필요한 추가 프로필 정보를 받아 최종 회원 생성을 완료</p>
  * <hr/>
- * <h5>기타 참고</h5>
+ * <h5>검증 및 보안 정책</h5>
  * <ol>
- *     <li>소셜 식별 정보(provider/providerId/email)은 요청 본문이 아닌 signUpToken(Redis payload)에서 복원</li>
- *     <li>Member 필수 컬럼을 누락 없이 입력받도록 검증하고 있음</li>
+ *     <li>{@code signUpToken}을 Key로 Redis에 임시 저장된 소셜 식별 정보(Provider, Email 등)를 조회하여 결합</li>
+ *     <li>입력된 {@code universityEmail}은 사전 수행된 인증 기록과 일치해야 하며, {@code universityDomainId}와 매칭되어야 함</li>
  * </ol>
  *
- * @param signUpToken     OAuth2 최초 로그인 시 발급된 회원가입 토큰(UUID)
- * @param nickname        닉네임(2~10자, 한글/영문/숫자)
- * @param universityEmail 학교 이메일 전체 주소(예: user@pnu.ac.kr)
- * @param age             나이
- * @param gender          성별
- * @param mbti            MBTI 유형
- * @param entryYear       학번(2자리, 예: 22)
- * @param bio             자기소개(선택, 공백만 입력 불가, 최대 255자)
- * @param collegeId       단과대 ID(기존 majorId 요청도 허용)
- * @param faceShapeId     얼굴형 ID(선택)
+ * @param signUpToken        OAuth2 최초 로그인 시 발급된 회원가입 토큰(UUID)
+ * @param nickname           닉네임(2~10자, 한글/영문/숫자)
+ * @param universityEmail    인증 완료된 학교 이메일 주소 (Ex: user@pnu.ac.kr)
+ * @param universityDomainId 소속 대학 도메인의 고유 식별자
+ * @param age                나이(만 17세 ~ 100세 제한)
+ * @param gender             성별(MALE, FEMALE)
+ * @param mbti               MBTI 유형{@link MbtiType}
+ * @param entryYear          학번(2자리, 예: 22)
+ * @param bio                자기소개(선택 항목, 최대 255자, 공백만 입력 불가)
+ * @param collegeId          소속 단과대학 고유 식별자
+ * @param faceShapeId        추천 알고리즘용 얼굴형 식별자 (선택 항목)
  */
 public record SignUpRequest(
         @NotBlank(message = ErrorMessages.SIGN_UP_TOKEN_NOT_FOUND)
@@ -41,15 +41,19 @@ public record SignUpRequest(
         @Email(message = ErrorMessages.INVALID_EMAIL)
         String universityEmail,
 
+        @NotNull(message = ErrorMessages.UNIVERSITY_DOMAIN_ID_NOT_FOUND)
+        @Positive(message = ErrorMessages.INVALID_UNIVERSITY_DOMAIN_ID)
+        Long universityDomainId,
+
         @NotNull(message = ErrorMessages.AGE_NOT_FOUND)
         @Min(value = 17, message = ErrorMessages.INVALID_AGE_RANGE)
         @Max(value = 100, message = ErrorMessages.INVALID_AGE_RANGE)
         Integer age,
 
-        @NotBlank(message = ErrorMessages.GENDER_NOT_FOUND)
+        @NotNull(message = ErrorMessages.GENDER_NOT_FOUND)
         Gender gender,
 
-        @NotBlank(message = ErrorMessages.MBTI_NOT_FOUND)
+        @NotNull(message = ErrorMessages.MBTI_NOT_FOUND)
         MbtiType mbti,
 
         @NotNull(message = ErrorMessages.ENTRY_YEAR_NOT_FOUND)
@@ -62,7 +66,6 @@ public record SignUpRequest(
 
         @NotNull(message = ErrorMessages.COLLEGE_ID_NOT_FOUND)
         @Positive(message = ErrorMessages.INVALID_COLLEGE_ID)
-        @JsonAlias("majorId")
         Long collegeId,
 
         @Positive(message = ErrorMessages.INVALID_FACE_SHAPE_ID)

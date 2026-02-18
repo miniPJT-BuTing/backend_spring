@@ -8,11 +8,13 @@ public final class ErrorMessages {
     public static final String INVALID_SIGN_UP_TOKEN = "유효하지 않은 회원가입 토큰입니다.";
     public static final String INVALID_AGE_RANGE = "나이는 17세 이상 100세 이하여야 합니다.";
     public static final String INVALID_ENTRY_YEAR = "학번은 0~99 범위여야 합니다.";
-    public static final String INVALID_COLLEGE_ID = "학교 ID는 양수여야 합니다.";
-    public static final String INVALID_FACE_SHAPE_ID = "학교 ID는 양수여야 합니다.";
+    public static final String INVALID_COLLEGE_ID = "단과대 ID는 양수여야 합니다.";
+    public static final String INVALID_FACE_SHAPE_ID = "얼굴형 ID는 양수여야 합니다.";
+    public static final String INVALID_UNIVERSITY_DOMAIN_ID = "학교 도메인 ID는 양수여야 합니다.";
 
     public static final String EMAIL_NOT_FOUND = "이메일을 입력해주세요.";
     public static final String SCHOOL_EMAIL_NOT_FOUND = "학교 이메일을 입력해주세요.";
+    public static final String UNIVERSITY_DOMAIN_ID_NOT_FOUND = "학교 도메인 ID를 입력해주세요.";
     public static final String NICKNAME_NOT_FOUND = "닉네임을 입력해주세요.";
     public static final String VERIFICATION_TYPE_NOT_FOUND = "이메일 검증 타입을 입력해주세요.";
     public static final String VERIFICATION_CODE_NOT_FOUND = "이메일 검증 코드를 입력해주세요.";
