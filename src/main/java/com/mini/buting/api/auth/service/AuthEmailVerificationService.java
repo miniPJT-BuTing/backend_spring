@@ -6,11 +6,14 @@ import com.mini.buting.api.auth.dto.response.EmailCodeResponse;
 import com.mini.buting.api.auth.dto.response.EmailVerifyResponse;
 import com.mini.buting.api.university.dto.ResolvedUniversity;
 import com.mini.buting.api.university.service.UniversityDomainQueryService;
+import com.mini.buting.api.university.util.UniversityEmailParser;
+import com.mini.buting.global.mail.constants.MailConstants;
 import com.mini.buting.global.mail.dto.MailContext;
 import com.mini.buting.global.mail.dto.MailType;
 import com.mini.buting.global.mail.dto.verification.VerificationCode;
 import com.mini.buting.global.mail.service.MailSendService;
 import com.mini.buting.global.mail.service.MailVerificationCodeService;
+import com.mini.buting.global.util.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,8 @@ public class AuthEmailVerificationService {
     private final UniversityDomainQueryService universityDomainQueryService;
     private final MailVerificationCodeService mailVerificationCodeService;
     private final MailSendService mailSendService;
+    private final RedisUtils redisUtils;
+    private final UniversityEmailParser universityEmailParser;
 
     /**
      * <h3>인증코드 발급 및 메일 발송</h3>
@@ -72,6 +77,9 @@ public class AuthEmailVerificationService {
 
         // 회원가입일 경우 대학 정보와 함께 응답
         if (mailType == MailType.SIGN_UP) {
+            String verifiedKey = MailConstants.Redis.verifiedKey(universityEmailParser.normalize(requestDto.email()), mailType);
+            redisUtils.setValue(verifiedKey, "1", MailConstants.Verification.VERIFIED_TTL);
+
             ResolvedUniversity resolved = universityDomainQueryService.resolveByEmail(requestDto.email());
             return EmailVerifyResponse.of(mailType, verified, resolved);
         }

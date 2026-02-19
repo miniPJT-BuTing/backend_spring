@@ -154,6 +154,7 @@ public enum BaseResponseStatus {
     MAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, false, 8002, "인증코드 입력 횟수를 초과했습니다."),
     MAIL_VERIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, false, 8003, "인증코드가 일치하지 않습니다."),
     MAIL_VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, false, 8004, "인증코드가 만료되었거나 존재하지 않습니다."),
+    MAIL_VERIFICATION_REQUIRED(HttpStatus.BAD_REQUEST, false, 8005, "이메일 인증이 필요합니다."),
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 8500, "메일 발송에 실패했습니다.");
 
 

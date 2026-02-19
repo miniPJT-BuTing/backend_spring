@@ -1,5 +1,7 @@
 package com.mini.buting.global.mail.constants;
 
+import com.mini.buting.global.mail.dto.MailType;
+
 import java.time.Duration;
 
 /**
@@ -35,6 +37,9 @@ public final class MailConstants {
         // 검증 최대 시도 횟수
         public static final int MAX_VERIFY_ATTEMPTS = 5;
 
+        // 인증 성공 상태 TTL (회원가입 완료까지 유효)
+        public static final Duration VERIFIED_TTL = Duration.ofMinutes(30);
+
         private Verification() {
         }
     }
@@ -47,6 +52,11 @@ public final class MailConstants {
         public static final String VERIFICATION_CODE_PREFIX = BASE_PREFIX + "verification:";
         public static final String VERIFICATION_COOLDOWN_PREFIX = VERIFICATION_CODE_PREFIX + "cooldown:";
         public static final String VERIFICATION_ATTEMPT_PREFIX = VERIFICATION_CODE_PREFIX + "attempt:";
+
+        public static final String VERIFICATION_VERIFIED_PREFIX = VERIFICATION_CODE_PREFIX + "verified:";
+        public static String verifiedKey(String normalizedEmail, MailType mailType) {
+            return VERIFICATION_VERIFIED_PREFIX + mailType.name() + ":" + normalizedEmail;
+        }
 
         private Redis() {
         }

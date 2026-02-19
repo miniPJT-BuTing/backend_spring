@@ -39,7 +39,7 @@ public class UniversityEmailParser {
         return normalized.substring(0, at);
     }
 
-    private String normalize(String email) {
+    public String normalize(String email) {
         if (!StringUtils.hasText(email)) {
             throw new BaseException(BaseResponseStatus.INVALID_UNIVERSITY_EMAIL);
         }

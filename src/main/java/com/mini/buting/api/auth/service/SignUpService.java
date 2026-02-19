@@ -16,6 +16,8 @@ import com.mini.buting.api.university.repository.UniversityDomainRepository;
 import com.mini.buting.api.university.service.UniversityDomainQueryService;
 import com.mini.buting.api.university.util.UniversityEmailParser;
 import com.mini.buting.global.exception.BaseException;
+import com.mini.buting.global.mail.constants.MailConstants;
+import com.mini.buting.global.mail.dto.MailType;
 import com.mini.buting.global.response.BaseResponseStatus;
 import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.util.RedisUtils;
@@ -49,6 +51,14 @@ public class SignUpService {
         OAuth2SignUpPayload payload = getSignUpPayloadOrThrow(signUpKey);
         payload.validateRequiredOrThrow();
 
+        String verifiedKey = MailConstants.Redis.verifiedKey(
+                universityEmailParser.normalize(requestDto.universityEmail()),
+                MailType.SIGN_UP
+        );
+        if (!redisUtils.isKeyExist(verifiedKey)) {
+            throw new BaseException(BaseResponseStatus.MAIL_VERIFICATION_REQUIRED);
+        }
+
         validateUniversityDomainMatch(requestDto.universityEmail(), requestDto.universityDomainId());
         validateDuplicates(requestDto.nickname(), payload.provider(), payload.providerId(), requestDto.universityEmail());
 
@@ -73,6 +83,7 @@ public class SignUpService {
         memberSocialRepository.save(MemberSocial.of(saved, payload));
 
         redisUtils.deleteValue(signUpKey);
+        redisUtils.deleteValue(verifiedKey);
     }
 
     private OAuth2SignUpPayload getSignUpPayloadOrThrow(String key) {
