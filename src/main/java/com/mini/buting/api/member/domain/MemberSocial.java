@@ -1,5 +1,6 @@
 package com.mini.buting.api.member.domain;
 
+import com.mini.buting.api.auth.dto.OAuth2SignUpPayload;
 import com.mini.buting.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,12 +44,20 @@ public class MemberSocial extends BaseTimeEntity {
     @Comment("소셜 계정 이메일")
     private String email;
 
-    public static MemberSocial create(Member member, SocialProvider providerName, String providerId, String email) {
+    /**
+     * <h3>MemberSocial 생성</h3>
+     * <p>OAuth2 인증 성공 후 전달받은 페이로드를 바탕으로 새로운 소셜 연동 정보를 구축</p>
+     *
+     * @param member  연동할 서비스 멤버 엔티티
+     * @param payload 소셜 플랫폼에서 추출된 식별 정보 DTO
+     * @return {@link MemberSocial} 생성된 연동 엔티티
+     */
+    public static MemberSocial of(Member member, OAuth2SignUpPayload payload) {
         return MemberSocial.builder()
                 .member(member)
-                .providerName(providerName)
-                .providerId(providerId)
-                .email(email)
+                .providerName(SocialProvider.from(payload.provider()))
+                .providerId(payload.providerId())
+                .email(payload.email())
                 .build();
     }
 }

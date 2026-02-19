@@ -1,5 +1,6 @@
 package com.mini.buting.global.security.handler.oauth2.strategy;
 
+import com.mini.buting.api.auth.dto.OAuth2SignUpPayload;
 import com.mini.buting.api.auth.dto.response.NeedSignUpResponse;
 import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.security.handler.oauth2.OAuth2SuccessHandlerStrategy;
@@ -28,7 +29,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GuestSignUpSuccessStrategy implements OAuth2SuccessHandlerStrategy {
 
-    private static final Duration SIGNUP_TOKEN_TTL = Duration.ofMinutes(10);
+    private static final Duration SIGNUP_TOKEN_TTL = Duration.ofMinutes(30);
+
     private final RedisUtils redisUtils;
     private final SecurityProperties securityProperties;
 
@@ -46,17 +48,11 @@ public class GuestSignUpSuccessStrategy implements OAuth2SuccessHandlerStrategy 
         String signUpToken = UUID.randomUUID().toString();
         String redisKey = SecurityConstants.Redis.OAUTH2_SIGNUP_PREFIX + signUpToken;
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("provider", guest.provider().getName());
-        payload.put("providerId", guest.providerId());
-        payload.put("email", guest.email());
-        payload.put("nickname", guest.nickname());
+        OAuth2SignUpPayload payload = OAuth2SignUpPayload.of(guest);
         redisUtils.setValue(redisKey, payload, SIGNUP_TOKEN_TTL);
 
         String redirectUri = securityProperties.oauth2().client().successUrl();
         String query = NeedSignUpResponse.of(guest, signUpToken).toQueryParams();
-
         response.sendRedirect(redirectUri + "?" + query);
-
     }
 }
