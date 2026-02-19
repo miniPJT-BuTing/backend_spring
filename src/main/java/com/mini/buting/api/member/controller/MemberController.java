@@ -1,15 +1,17 @@
 package com.mini.buting.api.member.controller;
 
 import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
+import com.mini.buting.api.auth.service.SignUpService;
+import com.mini.buting.api.member.domain.PersonalityType;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
 import com.mini.buting.api.member.dto.request.SignUpRequest;
 import com.mini.buting.api.member.service.MemberService;
+import com.mini.buting.api.member.dto.response.PersonalityKeywordResponse;
 import com.mini.buting.global.constant.ErrorMessages;
 import com.mini.buting.global.constant.Patterns;
 import com.mini.buting.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -27,6 +30,7 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService memberService;
+    private final SignUpService signUpService;
 
     /**
      * 내 프로필 조회
@@ -73,13 +77,10 @@ public class MemberController {
     //        return BaseResponse.onSuccess(profile);
     //    }
 
-    /**
-     * @implNote 소셜 로그인 이후 진행되는 API라, 소셜 정보 연계가 필요함.
-     */
     @Operation(summary = "회원가입 API", description = "신규 사용자를 등록")
     @PostMapping()
-    public BaseResponse<Void> signUp(@Valid @RequestBody SignUpRequest requestDto, HttpServletResponse response) {
-        // TODO: 회원가입 서비스 로직 호출
+    public BaseResponse<Void> signUp(@Valid @RequestBody SignUpRequest requestDto) {
+        signUpService.signUp(requestDto);
         return BaseResponse.onSuccess();
     }
 
@@ -105,6 +106,15 @@ public class MemberController {
             String nickname
     ) {
         return BaseResponse.onSuccess(memberService.checkAvailability(email, nickname));
+    }
+
+    @Operation(summary = "성격 키워드 목록 조회 API", description = "선택 가능한 성격 키워드 목록 조회")
+    @GetMapping("/personality-keywords")
+    public BaseResponse<List<PersonalityKeywordResponse>> getPersonalityKeywords() {
+        List<PersonalityKeywordResponse> result = Arrays.stream(PersonalityType.values())
+                .map(PersonalityKeywordResponse::from)
+                .toList();
+        return BaseResponse.onSuccess(result);
     }
 
 }
