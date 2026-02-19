@@ -1,9 +1,11 @@
 package com.mini.buting.api.member.domain;
 
 import com.mini.buting.api.analysis.domain.FaceShape;
+import com.mini.buting.api.member.constants.MemberConstants;
+import com.mini.buting.api.member.dto.request.SignUpRequest;
 import com.mini.buting.api.team.domain.Team;
 import com.mini.buting.api.team.domain.TeamMember;
-import com.mini.buting.api.university.domain.College; // Major 대신 College(단과대) 사용
+import com.mini.buting.api.university.domain.College;
 import com.mini.buting.api.university.domain.University;
 import com.mini.buting.api.university.domain.UniversityDomain;
 import com.mini.buting.global.common.BaseTimeEntity;
@@ -22,19 +24,19 @@ import java.util.Set;
 
 @Entity
 @Table(name = "member", indexes = {@Index(name = "idx_member_uuid", columnList = "uuid"),
-                @Index(name = "idx_member_nickname", columnList = "nickname"),
-                @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
-                @Index(name = "idx_member_college", columnList = "college_id"),
-                @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
-                @Index(name = "idx_member_mbti", columnList = "mbti"),
-                @Index(name = "idx_member_entry_year", columnList = "entry_year")},
-                uniqueConstraints = {
-                                @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
-                                @UniqueConstraint(name = "uk_member_nickname",
-                                                columnNames = {"nickname"}),
-                                @UniqueConstraint(name = "uk_university_email",
-                                                columnNames = {"university_domain_id",
-                                                                "university_email"})})
+        @Index(name = "idx_member_nickname", columnList = "nickname"),
+        @Index(name = "idx_member_university_domain", columnList = "university_domain_id"),
+        @Index(name = "idx_member_college", columnList = "college_id"),
+        @Index(name = "idx_member_face_shape", columnList = "face_shape_id"),
+        @Index(name = "idx_member_mbti", columnList = "mbti"),
+        @Index(name = "idx_member_entry_year", columnList = "entry_year")},
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_member_uuid", columnNames = {"uuid"}),
+                @UniqueConstraint(name = "uk_member_nickname",
+                        columnNames = {"nickname"}),
+                @UniqueConstraint(name = "uk_university_email",
+                        columnNames = {"university_domain_id",
+                                "university_email"})})
 @Getter
 @Builder
 @DynamicUpdate
@@ -94,7 +96,7 @@ public class Member extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_domain_id", nullable = false,
-                    foreignKey = @ForeignKey(name = "FK_member_university_domain"))
+            foreignKey = @ForeignKey(name = "FK_member_university_domain"))
     @Comment("소속 대학 도메인 ID")
     private UniversityDomain universityDomain;
 
@@ -122,6 +124,27 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberPersonality> personalities = new ArrayList<>();
 
+    /**
+     * <h3>신규 Member 엔티티 생성 팩토리 메서드</h3>
+     * <p>회원가입 요청 DTO를 기반으로 초기 권한({@code USER})과 필수 대학 정보를 조합하여 엔티티를 빌드</p>
+     */
+    public static Member of(SignUpRequest requestDto, UniversityDomain universityDomain, College college, FaceShape faceShape, String uuid, String localPart) {
+        return Member.builder()
+                .uuid(uuid)
+                .nickname(requestDto.nickname())
+                .role(MemberRole.USER)
+                .age(requestDto.age())
+                .gender(requestDto.gender())
+                .bio(requestDto.bio())
+                .mbti(requestDto.mbti())
+                .entryYear(requestDto.entryYear())
+                .universityDomain(universityDomain)
+                .universityEmail(localPart)
+                .college(college)
+                .faceShape(faceShape)
+                .build();
+    }
+
     @PrePersist
     public void prePersist() {
         if (this.role == null) {
@@ -132,6 +155,11 @@ public class Member extends BaseTimeEntity {
         }
     }
 
+    /**
+     * <h3>Soft Delete 수행</h3>
+     *
+     * @throws BaseException 이미 탈퇴한 회원인 경우 {@code MEMBER_ALREADY_DELETED} 발생
+     */
     public void softDelete() {
         if (this.isDeleted) {
             throw new BaseException(BaseResponseStatus.MEMBER_ALREADY_DELETED);
@@ -140,10 +168,14 @@ public class Member extends BaseTimeEntity {
         this.deletedAt = LocalDateTime.now();
     }
 
+    // --- 대학 및 이메일 도메인 ---
     public University getUniversity() {
         return this.universityDomain != null ? this.universityDomain.getUniversity() : null;
     }
 
+    /**
+     * @return {@code id@email.ac.kr} 형태의 전체 학교 이메일 주소 반환
+     */
     public String getFullUniversityEmail() {
         if (this.universityDomain == null || !StringUtils.hasText(this.universityEmail)) {
             return null;
@@ -151,7 +183,7 @@ public class Member extends BaseTimeEntity {
         return this.universityEmail + "@" + this.universityDomain.getDomain();
     }
 
-    // 팀 관련 편의 메서드
+    // --- 팀(Team) 관련 편의 메서드 ---
     public List<Team> getTeams() {
         return teamMemberships.stream().map(TeamMember::getTeam).toList();
     }
@@ -175,7 +207,7 @@ public class Member extends BaseTimeEntity {
         this.teamMemberships.removeIf(tm -> tm.getTeam().equals(team));
     }
 
-    // MBTI 관련 편의 메서드
+    // --- 성격 및 MBTI 관련 ---
     public void updateMbti(MbtiType newMbti) {
         if (newMbti == null) {
             throw new BaseException(BaseResponseStatus.MBTI_REQUIRED);
@@ -191,18 +223,24 @@ public class Member extends BaseTimeEntity {
         return this.mbti != null ? this.mbti.getDescription() : null;
     }
 
-    // 성격 키워드 관련 편의 메서드
+    /**
+     * <h3>사용자 성격 키워드 일괄 설정</h3>
+     * <p>기존 키워드를 모두 제거하고 새로운 키워드 세트로 교체</p>
+     *
+     * @param personalityTypes 설정할 키워드 목록 (최대 {@link MemberConstants.Personality#MAX_COUNT}개)
+     * @throws BaseException 개수 초과, 중복 타입, 혹은 필수값 누락 시 관련 에러 발생
+     */
     public void setPersonalities(List<PersonalityType> personalityTypes) {
-        if (personalityTypes == null) {
-            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        if (personalityTypes == null || personalityTypes.isEmpty()) {
+            throw new BaseException(BaseResponseStatus.PERSONALITY_REQUIRED);
         }
-        if (personalityTypes.size() != 3) {
+        if (personalityTypes.size() > MemberConstants.Personality.MAX_COUNT) {
             throw new BaseException(BaseResponseStatus.INVALID_PERSONALITY_COUNT);
         }
 
         // 중복 체크
         Set<PersonalityType> uniqueTypes = Set.copyOf(personalityTypes);
-        if (uniqueTypes.size() != 3) {
+        if (uniqueTypes.size() != personalityTypes.size()) {
             throw new BaseException(BaseResponseStatus.DUPLICATE_PERSONALITY_TYPES);
         }
 
@@ -225,7 +263,7 @@ public class Member extends BaseTimeEntity {
 
     public boolean hasPersonalityType(PersonalityType personalityType) {
         return personalities.stream()
-                        .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
+                .anyMatch(mp -> mp.getPersonalityType().equals(personalityType));
     }
 
     // 얼굴형 분석 결과 편의 메서드

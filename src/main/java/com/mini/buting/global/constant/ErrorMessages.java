@@ -1,5 +1,7 @@
 package com.mini.buting.global.constant;
 
+import com.mini.buting.api.member.constants.MemberConstants;
+
 public final class ErrorMessages {
 
     public static final String INVALID_EMAIL = "올바른 이메일 형식이 아닙니다.";
@@ -11,6 +13,7 @@ public final class ErrorMessages {
     public static final String INVALID_COLLEGE_ID = "단과대 ID는 양수여야 합니다.";
     public static final String INVALID_FACE_SHAPE_ID = "얼굴형 ID는 양수여야 합니다.";
     public static final String INVALID_UNIVERSITY_DOMAIN_ID = "학교 도메인 ID는 양수여야 합니다.";
+    public static final String INVALID_PERSONALITY_TYPES_COUNT = "성격 키워드는 1개 이상, 제한 개수 이하로 선택해주세요.";
 
     public static final String EMAIL_NOT_FOUND = "이메일을 입력해주세요.";
     public static final String SCHOOL_EMAIL_NOT_FOUND = "학교 이메일을 입력해주세요.";
@@ -20,6 +23,7 @@ public final class ErrorMessages {
     public static final String VERIFICATION_CODE_NOT_FOUND = "이메일 검증 코드를 입력해주세요.";
     public static final String GENDER_NOT_FOUND = "성별을 입력해주세요.";
     public static final String COLLEGE_ID_NOT_FOUND = "단과대 ID를 입력해주세요.";
+    public static final String PERSONALITY_TYPES_NOT_FOUND = "성격 키워드를 선택해주세요.";
 
     public static final String SIGN_UP_TOKEN_NOT_FOUND = "회원가입 토큰을 입력해주세요.";
     public static final String AGE_NOT_FOUND = "나이를 입력해주세요.";

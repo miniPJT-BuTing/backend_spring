@@ -1,10 +1,14 @@
 package com.mini.buting.api.member.dto.request;
 
+import com.mini.buting.api.member.constants.MemberConstants;
 import com.mini.buting.api.member.domain.Gender;
 import com.mini.buting.api.member.domain.MbtiType;
+import com.mini.buting.api.member.domain.PersonalityType;
 import com.mini.buting.global.constant.ErrorMessages;
 import com.mini.buting.global.constant.Patterns;
 import jakarta.validation.constraints.*;
+
+import java.util.List;
 
 /**
  * <h2>회원가입 완료 요청</h2>
@@ -24,6 +28,7 @@ import jakarta.validation.constraints.*;
  * @param gender             성별(MALE, FEMALE)
  * @param mbti               MBTI 유형{@link MbtiType}
  * @param entryYear          학번(2자리, 예: 22)
+ * @param personalityTypes   성격 키워드 리스트
  * @param bio                자기소개(선택 항목, 최대 255자, 공백만 입력 불가)
  * @param collegeId          소속 단과대학 고유 식별자
  * @param faceShapeId        추천 알고리즘용 얼굴형 식별자 (선택 항목)
@@ -60,6 +65,10 @@ public record SignUpRequest(
         @Min(value = 0, message = ErrorMessages.INVALID_ENTRY_YEAR)
         @Max(value = 99, message = ErrorMessages.INVALID_ENTRY_YEAR)
         Integer entryYear,
+
+        @NotNull(message = ErrorMessages.PERSONALITY_TYPES_NOT_FOUND)
+        @Size(min = 1, max = MemberConstants.Personality.MAX_COUNT, message = ErrorMessages.INVALID_PERSONALITY_TYPES_COUNT)
+        List<PersonalityType> personalityTypes,
 
         @Pattern(regexp = Patterns.BIO_REGEX, message = ErrorMessages.INVALID_BIO)
         String bio,
