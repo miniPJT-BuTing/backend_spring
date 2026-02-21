@@ -88,6 +88,3 @@ rabbitmq:
 
 snowflake:
   node-id: ${SNOWFLAKE_NODE_ID}
-
-fastapi:
-  url: ${FASTAPI_URI}
