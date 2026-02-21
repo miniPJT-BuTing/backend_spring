@@ -151,6 +151,7 @@ public enum BaseResponseStatus {
      */
     READ_FILE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6001, "파일을 읽는데 실패했습니다."),
     FAST_API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6002, "AI 분석에 실패했습니다."),
+    UNSUPPORTED_FACE_SHAPE_TYPE(HttpStatus.BAD_REQUEST, false, 6400, "지원하지 않는 Face Shape 타입입니다."),
 
     /**
      * 8000: SMTP(메일) 관련 에러

@@ -3,7 +3,7 @@ package com.mini.buting.api.analysis.dto.response;
 import com.mini.buting.api.analysis.domain.FaceShape;
 
 public record AiResponse(
-        Long id,
+        Long faceShapeId,
         String name,
         String nickname,
         String description,
