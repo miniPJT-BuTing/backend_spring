@@ -6,6 +6,7 @@ server:
       secure: ${SERVER_COOKIE_SECURE:false}
       same-site: ${SERVER_COOKIE_SAMESITE:Lax}
       domain: ${SERVER_COOKIE_DOMAIN:}
+  forward-headers-strategy: framework
 
 swagger:
   uri: ${SWAGGER_URI}
