@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FaceShapeRepository extends JpaRepository<FaceShape, Long> {
+    FaceShape findByName(String animalType);
 }
