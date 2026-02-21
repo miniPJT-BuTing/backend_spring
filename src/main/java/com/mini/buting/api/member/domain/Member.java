@@ -270,4 +270,10 @@ public class Member extends BaseTimeEntity {
     public String getFaceShapeName() {
         return this.faceShape != null ? this.faceShape.getName() : null;
     }
+
+    public void updateFaceShape(FaceShape faceShape) {
+        if (faceShape != null) {
+            this.faceShape = faceShape;
+        }
+    }
 }
