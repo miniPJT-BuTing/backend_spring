@@ -16,6 +16,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AiService {
 
     private final WebClient fastApiWebClient;
@@ -43,12 +45,15 @@ public class AiService {
     /**
      * 회원 기준으로 분석 수행 후 faceShape를 회원 정보에 저장
      */
+    @Transactional
     public AiResponse analyzeFaceShapeAndUpdateMember(Long memberId, MultipartFile file) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
         String gender = member.getGender().equals(Gender.M) ? "남자" : "여자";
         AiFastapiResponse result = requestFastApiAnalysis(new AiFastapiRequest(gender, file));
+        String animalType = result.getAnimalType();
+        log.info("[AI] normalized='{}'", animalType == null ? null : animalType.trim());
         FaceShape faceShape = resolveFaceShape(result.getAnimalType());
 
         member.updateFaceShape(faceShape);
