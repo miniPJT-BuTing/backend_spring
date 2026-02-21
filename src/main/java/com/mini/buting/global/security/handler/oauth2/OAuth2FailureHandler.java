@@ -2,6 +2,7 @@ package com.mini.buting.global.security.handler.oauth2;
 
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
+import com.mini.buting.global.security.constant.OAuth2Constants;
 import com.mini.buting.global.security.constant.SecurityConstants;
 import com.mini.buting.global.security.property.SecurityProperties;
 import jakarta.servlet.ServletException;
@@ -60,8 +61,8 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
 
         String redirectUri = securityProperties.oauth2().client().successUrl();
         String targetUri = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("isSuccess", false)
-                .queryParam("code", errorCode)
+                .queryParam(OAuth2Constants.Parameter.IS_SUCCESS, false)
+                .queryParam(OAuth2Constants.Parameter.CODE, errorCode)
                 .build().toUriString();
 
         response.sendRedirect(targetUri);
