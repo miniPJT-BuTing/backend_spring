@@ -23,4 +23,16 @@ public class FaceShape extends BaseTimeEntity {
     @Column(name = "name", nullable = false, length = 30)
     @Comment("얼굴형 명칭 (예: 강아지상, 고양이상)")
     private String name;
+
+    @Column(name = "nickname", nullable = false, length = 30)
+    @Comment("얼굴형 별칭 (예: 복실복실 강아지상)")
+    private String nickname;
+
+    @Column(name = "description", nullable = false, length = 200)
+    @Comment("닮은 동물 특징 설명")
+    private String description;
+
+    @Column(name = "image", nullable = false, length = 200)
+    @Comment("닮은 동물 사진 S3 URL")
+    private String image;
 }
