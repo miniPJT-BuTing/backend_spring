@@ -83,7 +83,11 @@ public enum BaseResponseStatus {
      */
     MATCH_REQUEST_NOT_PENDING(HttpStatus.BAD_REQUEST, false, 4001, "대기 중인 매칭 요청이 아닙니다."),
     MATCH_REQUEST_EXPIRED(HttpStatus.BAD_REQUEST, false, 4002, "만료된 매칭 요청입니다."),
-    MATCH_REQUEST_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, false, 4001, "수락 된 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, false, 4003, "수락 된 매칭 요청이 아닙니다."),
+    MATCH_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, false, 4004, "매칭 요청을 찾을 수 없습니다."),
+    MATCH_REQUEST_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, false, 4005, "이미 존재하는 매칭 요청입니다."),
+    MATCH_REQUEST_SELF(HttpStatus.BAD_REQUEST, false, 4006, "같은 팀으로는 매칭 요청을 보낼 수 없습니다."),
+    MATCH_REQUEST_SAME_GENDER(HttpStatus.BAD_REQUEST, false, 4007, "같은 성별 팀과는 매칭할 수 없습니다."),
     /**
      * 4100: MBTI 관련 에러
      */
@@ -123,6 +127,7 @@ public enum BaseResponseStatus {
     TEAM_SIZE_MISMATCH(HttpStatus.BAD_REQUEST, false, 4503, "초대할 멤버 수가 팀 크기와 일치하지 않습니다."),
     DIFFERENT_GENDER_CANNOT_INVITE(HttpStatus.BAD_REQUEST, false, 4504, "다른 성별의 사용자는 초대할 수 없습니다."),
     TEAM_NOT_READY(HttpStatus.BAD_REQUEST, false, 4505, "모든 멤버가 수락해야 팀이 활성화됩니다."),
+    TEAM_ALREADY_MATCHED(HttpStatus.BAD_REQUEST, false, 4506, "매칭이 성사된 팀은 수정/삭제할 수 없습니다."),
 
     /**
      * 5000: 채팅방 관련 에러
@@ -139,7 +144,24 @@ public enum BaseResponseStatus {
     VOTE_NOT_AVAILABLE(HttpStatus.FORBIDDEN, false, 5010, "투표가 불가능합니다."),
     VOTE_OPTION_REQUIRED(HttpStatus.BAD_REQUEST, false, 5011, "옵션을 하나 이상 선택해야합니다."),
     VOTE_NOT_MULTIPLE(HttpStatus.BAD_REQUEST, false, 5012, "단일 투표에서 중복 투표는 불가능합니다."),
-    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다.");
+    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다."),
+
+    /**
+     * 6000: FastAPI Analysis 관련 에러
+     */
+    READ_FILE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6001, "파일을 읽는데 실패했습니다."),
+    FAST_API_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 6002, "AI 분석에 실패했습니다."),
+
+    /**
+     * 8000: SMTP(메일) 관련 에러
+     */
+    UNSUPPORTED_MAIL_TYPE(HttpStatus.BAD_REQUEST, false, 8000, "지원하지 않는 메일 타입입니다."),
+    MAIL_VERIFICATION_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, false, 8001, "인증코드 재요청이 너무 빠릅니다."),
+    MAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, false, 8002, "인증코드 입력 횟수를 초과했습니다."),
+    MAIL_VERIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, false, 8003, "인증코드가 일치하지 않습니다."),
+    MAIL_VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, false, 8004, "인증코드가 만료되었거나 존재하지 않습니다."),
+    MAIL_VERIFICATION_REQUIRED(HttpStatus.BAD_REQUEST, false, 8005, "이메일 인증이 필요합니다."),
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 8500, "메일 발송에 실패했습니다.");
 
 
     private final HttpStatusCode httpStatusCode;
