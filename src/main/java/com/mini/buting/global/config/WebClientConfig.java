@@ -1,6 +1,7 @@
 package com.mini.buting.global.config;
 
 import io.netty.channel.ChannelOption;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,9 @@ import java.time.Duration;
 
 @Configuration
 public class WebClientConfig {
+
+    @Value("${fastapi.url}")
+    private String FASTAPI_URI;
 
     DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory();
 
@@ -45,7 +49,7 @@ public class WebClientConfig {
     @Bean
     public WebClient fastApiWebClient(WebClient.Builder builder) {
         return builder
-                .baseUrl("https://dev.miniproj.kro.kr")
+                .baseUrl(FASTAPI_URI)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
