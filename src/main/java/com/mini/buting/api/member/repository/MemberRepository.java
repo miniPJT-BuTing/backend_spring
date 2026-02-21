@@ -1,5 +1,6 @@
 package com.mini.buting.api.member.repository;
 
+import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
 import com.mini.buting.api.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -85,4 +86,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsActiveById(@Param("memberId") Long memberId);
 
     boolean existsByNicknameAndIsDeletedFalse(String nickname);
+
+    /**
+     * 대학 이메일(local-part + domain) 기준 활성 회원 존재 여부 확인
+     *
+     * @param universityEmail local-part
+     * @param domain          도메인
+     * @return 존재하면 true
+     */
+    boolean existsByUniversityEmailAndUniversityDomain_DomainAndIsDeletedFalse(String universityEmail, String domain);
 }

@@ -5,6 +5,7 @@ import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.api.member.repository.MemberSocialRepository;
+import com.mini.buting.api.university.util.UniversityEmailParser;
 import com.mini.buting.global.exception.BaseException;
 import com.mini.buting.global.response.BaseResponseStatus;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.List;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final MemberSocialRepository memberSocialRepository;
+    private final UniversityEmailParser universityEmailParser;
 
     /**
      * 회원 프로필 조회
@@ -88,7 +89,10 @@ public class MemberService {
         List<MemberAvailabilityResponse> responses = new ArrayList<>();
 
         if (hasEmail) {
-            boolean isDuplicated = memberSocialRepository.existsByEmailAndMember_IsDeletedFalse(email);
+            String normalizedEmail = universityEmailParser.normalize(email);
+            String localPart = universityEmailParser.extractLocalPart(normalizedEmail);
+            String domain = universityEmailParser.extractDomain(normalizedEmail);
+            boolean isDuplicated = memberRepository.existsByUniversityEmailAndUniversityDomain_DomainAndIsDeletedFalse(localPart, domain);
             responses.add(MemberAvailabilityResponse.of(MemberAvailabilityResponse.AvailabilityType.EMAIL, email, !isDuplicated));
         }
 
