@@ -2,6 +2,10 @@ server:
   port: ${SERVER_PORT}
   tomcat:
     max-swallow-size: -1
+  cookie:
+      secure: ${SERVER_COOKIE_SECURE:false}
+      same-site: ${SERVER_COOKIE_SAMESITE:Lax}
+      domain: ${SERVER_COOKIE_DOMAIN:}
 
 swagger:
   uri: ${SWAGGER_URI}
@@ -12,6 +16,9 @@ springdoc:
     operations-sorter: alpha
 
 spring:
+  config:
+    import:
+      - optional:application-auth.yaml
   jackson:
     time-zone: ${JSON_TIME_ZONE}
   datasource:
@@ -52,6 +59,23 @@ spring:
     username: ${RABBIT_MQ_ID}
     password: ${RABBIT_MQ_PASSWORD}
     virtual-host: /
+
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  web-url:
+    main: ${APP_WEB_URL_MAIN}
+    logo: ${APP_WEB_URL_LOGO}
 
 rabbitmq:
   chat-queue:

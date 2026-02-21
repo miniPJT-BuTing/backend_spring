@@ -24,7 +24,7 @@ public enum SocialProvider {
 
     private final String name;
 
-    public static SocialProvider toProviderName(String providerName) {
+    public static SocialProvider from(String providerName) {
         SocialProvider provider = (!StringUtils.hasText(providerName)) ? null : PROVIDER_NAME_MAP.get(providerName.toUpperCase(Locale.ROOT));
         return Optional.ofNullable(provider)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.SOCIAL_TYPE_NOT_SUPPORTED));

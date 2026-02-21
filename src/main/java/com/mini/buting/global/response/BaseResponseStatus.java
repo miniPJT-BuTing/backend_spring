@@ -20,9 +20,16 @@ public enum BaseResponseStatus {
     NOT_FOUND(HttpStatus.NOT_FOUND, false, 404, "요청하신 정보를 찾을 수 없습니다."),
     PAYLOAD_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, false, 413, "파일 업로드 용량 초과입니다. 파일 당 요청 합계 제한을 확인하세요."),
 
-    AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
-
     ACCESS_DENIED(HttpStatus.FORBIDDEN, false, 403, "접근 권한이 없습니다."),
+
+    // 401 UNAUTHORIZED: 인증 실패
+    AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 필요한 요청입니다."),
+    AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, false, 401, "인증이 실패했습니다."),
+
+    INVALID_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "유효하지 않은 JWT 토큰입니다."),
+    EXPIRED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "만료된 JWT 토큰입니다."),
+    UNSUPPORTED_JWT_TOKEN(HttpStatus.UNAUTHORIZED, false, 401, "지원되지 않는 형식의 JWT 토큰입니다."),
+    INVALID_TOKEN_CLAIM(HttpStatus.UNAUTHORIZED, false, 401, "토큰 정보가 올바르지 않습니다."),
 
     /**
      * 5xx: Sever Error (서버 에러)
@@ -137,7 +144,18 @@ public enum BaseResponseStatus {
     VOTE_NOT_AVAILABLE(HttpStatus.FORBIDDEN, false, 5010, "투표가 불가능합니다."),
     VOTE_OPTION_REQUIRED(HttpStatus.BAD_REQUEST, false, 5011, "옵션을 하나 이상 선택해야합니다."),
     VOTE_NOT_MULTIPLE(HttpStatus.BAD_REQUEST, false, 5012, "단일 투표에서 중복 투표는 불가능합니다."),
-    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다.");
+    INVALID_VOTE_OPTION(HttpStatus.BAD_REQUEST, false, 5013, "해당 투표의 옵션ID가 아닙니다."),
+
+    /**
+     * 8000: SMTP(메일) 관련 에러
+     */
+    UNSUPPORTED_MAIL_TYPE(HttpStatus.BAD_REQUEST, false, 8000, "지원하지 않는 메일 타입입니다."),
+    MAIL_VERIFICATION_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS, false, 8001, "인증코드 재요청이 너무 빠릅니다."),
+    MAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, false, 8002, "인증코드 입력 횟수를 초과했습니다."),
+    MAIL_VERIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, false, 8003, "인증코드가 일치하지 않습니다."),
+    MAIL_VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, false, 8004, "인증코드가 만료되었거나 존재하지 않습니다."),
+    MAIL_VERIFICATION_REQUIRED(HttpStatus.BAD_REQUEST, false, 8005, "이메일 인증이 필요합니다."),
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, false, 8500, "메일 발송에 실패했습니다.");
 
 
     private final HttpStatusCode httpStatusCode;
