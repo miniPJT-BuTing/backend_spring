@@ -13,6 +13,7 @@ import com.mini.buting.api.chat.dto.request.ChatRoomUpdateRequest;
 import com.mini.buting.api.chat.dto.response.*;
 import com.mini.buting.api.chat.repository.ChatRoomMemberRepository;
 import com.mini.buting.api.chat.repository.ChatRoomRepository;
+import com.mini.buting.api.chat.repository.NoticeRepository;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.team.domain.Gender;
@@ -40,6 +41,7 @@ public class ChatRoomService {
     private final ChatService chatService;
     private final ObjectMapper objectMapper;
     private final ChatRoomListService chatRoomListService;
+    private final NoticeRepository noticeRepository;
 
     // 채팅방 생성
     public ChatRoom createRoom(MatchRequest match) {
@@ -130,7 +132,9 @@ public class ChatRoomService {
 
         ChatMessagesResponse messages = getMessages(roomIdStr, senderId, null);
 
-        return new ChatRoomInfoResponse(roomInfo, allByIdRoomId, messages);
+        NoticeSummaryInfo noticeSummary = noticeRepository.findNoticeSummaryById(roomId);
+
+        return new ChatRoomInfoResponse(roomInfo, noticeSummary, allByIdRoomId, messages);
     }
 
     private List<ChatMessageResponse> getRecentMessages(Long roomId) {

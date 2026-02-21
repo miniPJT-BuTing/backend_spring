@@ -1,0 +1,56 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${OAUTH2_REGISTRATION_KAKAO_CLIENT_ID}
+            client-secret:  ${OAUTH2_REGISTRATION_KAKAO_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}${SECURITY_OAUTH_REDIRECTION_BASE}/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Kakao
+            scope:
+              - profile_nickname
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+security:
+  jwt:
+    secret-key: ${SECURITY_JWT_SECRET_KEY}
+    expire-time:
+      access: ${SECURITY_JWT_EXP_ACCESS}
+      refresh: ${SECURITY_JWT_EXP_REFRESH}
+
+  oauth2:
+    endpoint:
+      authorization: ${SECURITY_OAUTH_AUTHORIZATION_ENDPOINT}
+      redirection: ${SECURITY_OAUTH_REDIRECTION_BASE}
+    client:
+      success-url: ${SECURITY_OAUTH_CLIENT_BASE_URL}${SECURITY_OAUTH_CLIENT_SUCCESS_PATH}
+
+  whitelist:
+    values:
+      GET: ${SECURITY_WHITELIST_GET:}
+      POST: ${SECURITY_WHITELIST_POST:}
+      PUT: ${SECURITY_WHITELIST_PUT:}
+      DELETE: ${SECURITY_WHITELIST_DELETE:}
+      PATCH: ${SECURITY_WHITELIST_PATCH:}
+      OPTIONS: ${SECURITY_WHITELIST_OPTIONS:}
+
+  cors:
+    allowed-origins: ${SECURITY_CORS_ALLOWED_ORIGINS}
+    allowed-methods: ${SECURITY_CORS_ALLOWED_METHODS}
+    allowed-headers: ${SECURITY_CORS_ALLOWED_HEADERS}
+    allow-credentials: ${SECURITY_CORS_ALLOW_CREDENTIALS}
+    exposed-headers: ${SECURITY_CORS_EXPOSED_HEADERS}
+    max-age: ${SECURITY_CORS_MAX_AGE:3600}
+
+  access-rules:
+    -  role: "ADMIN"
+       paths: ${SECURITY_ADMIN_PATHS}

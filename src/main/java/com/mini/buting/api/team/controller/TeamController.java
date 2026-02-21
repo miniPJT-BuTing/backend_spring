@@ -2,6 +2,9 @@ package com.mini.buting.api.team.controller;
 
 import com.mini.buting.api.team.dto.request.TeamRequestDto;
 import com.mini.buting.api.team.dto.response.TeamResponseDto;
+import com.mini.buting.api.team.domain.Gender;
+import com.mini.buting.api.team.domain.TeamMood;
+import com.mini.buting.api.team.domain.TeamSize;
 import com.mini.buting.api.team.service.TeamInvitationService;
 import com.mini.buting.api.team.service.TeamService;
 import com.mini.buting.global.response.BaseResponse;
@@ -11,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -88,5 +93,57 @@ public class TeamController {
                         teamInvitationService.respondToInvitation(memberId, invitationId, request);
 
         return ResponseEntity.ok(BaseResponse.onSuccess(response));
+    }
+
+    @Operation(summary = "팀 매칭글 목록 조회", description = "오픈된 팀(매칭글) 목록을 필터링하여 조회합니다.")
+    @GetMapping("/matching-posts")
+    public ResponseEntity<BaseResponse<Page<TeamResponseDto.TeamMatchPostSummary>>> getMatchingPosts(
+                    @Parameter(description = "사용자 ID")
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long memberId,
+                    @Parameter(description = "MALE | FEMALE") @RequestParam(required = false)
+                    Gender gender,
+                    @Parameter(description = "TWO_ON_TWO | THREE_ON_THREE | ...") @RequestParam(required = false)
+                    TeamSize teamSize,
+                    @Parameter(description = "ROMANTIC_TENSION | ...") @RequestParam(required = false)
+                    TeamMood preferredMood,
+                    Pageable pageable) {
+
+        Page<TeamResponseDto.TeamMatchPostSummary> response =
+                        teamService.getMatchingPosts(gender, teamSize, preferredMood, pageable);
+
+        return ResponseEntity.ok(BaseResponse.onSuccess(response));
+    }
+
+    @Operation(summary = "팀 매칭글 상세 조회", description = "오픈된 팀(매칭글) 상세 정보를 조회합니다.")
+    @GetMapping("/matching-posts/{teamId}")
+    public ResponseEntity<BaseResponse<TeamResponseDto.TeamMatchPostDetail>> getMatchingPostDetail(
+                    @Parameter(description = "팀(매칭글) ID", required = true) @PathVariable Long teamId) {
+        TeamResponseDto.TeamMatchPostDetail response = teamService.getMatchingPostDetail(teamId);
+        return ResponseEntity.ok(BaseResponse.onSuccess(response));
+    }
+
+    @Operation(summary = "내가 팀장인 매칭글 수정", description = "팀장만 매칭글을 수정할 수 있습니다. (매칭 성사 전까지만 가능)")
+    @PatchMapping("/matching-posts/{teamId}")
+    public ResponseEntity<BaseResponse<TeamResponseDto.TeamMatchPostDetail>> updateMatchingPost(
+                    @Parameter(description = "팀장 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long leaderId,
+                    @Parameter(description = "팀(매칭글) ID", required = true) @PathVariable Long teamId,
+                    @Valid @RequestBody TeamRequestDto.UpdateMatchPostRequest request) {
+        TeamResponseDto.TeamMatchPostDetail response =
+                        teamService.updateMatchingPost(leaderId, teamId, request);
+        return ResponseEntity.ok(BaseResponse.onSuccess(response));
+    }
+
+    @Operation(summary = "내가 팀장인 매칭글 삭제", description = "팀장만 매칭글을 삭제(해체)할 수 있습니다. (매칭 성사 전까지만 가능)")
+    @DeleteMapping("/matching-posts/{teamId}")
+    public ResponseEntity<BaseResponse<Void>> deleteMatchingPost(
+                    @Parameter(description = "팀장 ID", required = true)
+                    @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1")
+                    Long leaderId,
+                    @Parameter(description = "팀(매칭글) ID", required = true) @PathVariable Long teamId) {
+        teamService.deleteMatchingPost(leaderId, teamId);
+        return ResponseEntity.ok(BaseResponse.onSuccess());
     }
 }

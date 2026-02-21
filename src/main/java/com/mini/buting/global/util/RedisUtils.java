@@ -33,6 +33,11 @@ public class RedisUtils {
         valueOperations.set(key, value, duration);
     }
 
+    public boolean setValueIfAbsent(String key, Object value, Duration duration) {
+        Boolean result = valueOperations.setIfAbsent(key, value, duration);
+        return Boolean.TRUE.equals(result);
+    }
+
     public boolean isKeyExist(String key) {
         return redisTemplate.hasKey(key);
     }
@@ -41,8 +46,8 @@ public class RedisUtils {
         return valueOperations.get(key);
     }
 
-    public void deleteValue(String key) {
-        redisTemplate.delete(key);
+    public boolean deleteValue(String key) {
+        return redisTemplate.delete(key);
     }
 
     public void addSetValue(String key, Object value) {

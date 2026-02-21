@@ -86,7 +86,7 @@ public class MatchRequest extends BaseTimeEntity {
     }
 
     public void validateAcceptedStatus() {
-        if(status != MatchRequestStatus.ACCEPTED){
+        if (status != MatchRequestStatus.ACCEPTED) {
             throw new BaseException((BaseResponseStatus.MATCH_REQUEST_NOT_ACCEPTED));
         }
     }

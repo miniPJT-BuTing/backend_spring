@@ -1,6 +1,7 @@
 package com.mini.buting.api.chat.repository;
 
 import com.mini.buting.api.chat.domain.chatroom.Notice;
+import com.mini.buting.api.chat.dto.response.NoticeSummaryInfo;
 import com.mini.buting.api.chat.dto.response.NoticeViewResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +27,18 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
         where nt.id = :roomId
     """)
     NoticeViewResponse findNoticeInfoById(@Param("roomId")Long roomId);
+
+    @Query("""
+        select new com.mini.buting.api.chat.dto.response.NoticeSummaryInfo(
+            nt.place,
+            nt.meetAt,
+            nt.description,
+            nt.updatedAt
+        )
+        from Notice nt
+        where nt.id = :roomId
+    """)
+    NoticeSummaryInfo findNoticeSummaryById(@Param("roomId")Long roomId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from Notice n where n.id = :roomId")

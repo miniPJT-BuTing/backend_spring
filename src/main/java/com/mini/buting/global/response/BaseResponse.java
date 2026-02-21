@@ -29,4 +29,12 @@ public record BaseResponse<T>(
     public static <T> BaseResponse<T> onFailure(BaseResponseStatus status, String message) {
         return new BaseResponse<>(status.getHttpStatusCode(), status.isSuccess(), message, status.getCode(), null);
     }
+
+    public BaseResponse(BaseResponseStatus status) {
+        this(status.getHttpStatusCode(), status.isSuccess(), status.getMessage(), status.getCode(), null);
+    }
+
+    public BaseResponse(BaseResponseStatus status, String message) {
+        this(status.getHttpStatusCode(), status.isSuccess(), message, status.getCode(), null);
+    }
 }

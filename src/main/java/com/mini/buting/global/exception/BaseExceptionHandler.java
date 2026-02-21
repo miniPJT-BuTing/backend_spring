@@ -2,6 +2,8 @@ package com.mini.buting.global.exception;
 
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.response.BaseResponseStatus;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -32,7 +34,18 @@ public class BaseExceptionHandler {
     protected BaseResponse<Void> handleValidException(MethodArgumentNotValidException e) {
         String errorMessage = e.getFieldErrors().get(0).getDefaultMessage();
         writeLog(BaseResponseStatus.INVALID_REQUEST, e, errorMessage);
-        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST, errorMessage);
+        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST);
+    }
+
+    /* @RequestParam 검증 */
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected BaseResponse<Void> handleViolationException(ConstraintViolationException e) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .findFirst()
+                .orElse(BaseResponseStatus.INVALID_REQUEST.getMessage());
+        writeLog(BaseResponseStatus.INVALID_REQUEST, e, errorMessage);
+        return BaseResponse.onFailure(BaseResponseStatus.INVALID_REQUEST);
     }
 
     /* 파일 용량 초과 */
@@ -53,7 +66,7 @@ public class BaseExceptionHandler {
     public ResponseEntity<BaseResponse<Void>> handleIllegalState(IllegalStateException ex) {
         String msg = ex.getMessage();
         if (msg != null && msg.contains("exceeds its maximum permitted size")) {
-            log.error("Multipart size exceeded (IllegalState): {}", msg);
+            log.warn("Multipart size exceeded (IllegalState): {}", msg);
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                     .body(BaseResponse.onFailure(BaseResponseStatus.PAYLOAD_TOO_LARGE));
         }
@@ -61,12 +74,41 @@ public class BaseExceptionHandler {
     }
 
     private void writeLog(BaseResponseStatus status, Exception e) {
-        log.error("[{}] Status: {} | Message: {}",
-                e.getClass().getSimpleName(), status, status.getMessage(), e);
+        int httpStatus = status.getHttpStatusCode().value();
+        int code = status.getHttpStatusCode().value();
+        String message = String.format(
+                "[%s] http=%d, code=%d, status=%s, message=%s",
+                e.getClass().getSimpleName(),
+                httpStatus,
+                status.getCode(),
+                status.name(),
+                status.getMessage());
+
+        if (status.getHttpStatusCode().is5xxServerError()) {
+            log.error(message, e);
+            return;
+        }
+
+        log.warn(message);
     }
 
     private void writeLog(BaseResponseStatus status, Exception e, String customMessage) {
-        log.error("[{}] Status: {} | CustomMessage: {}",
-                e.getClass().getSimpleName(), status, customMessage);
+        int httpStatus = status.getHttpStatusCode().value();
+
+        String message = String.format(
+                "[%s] http: %d, code=%d, status=%s, customMessage=%s",
+                e.getClass().getSimpleName(),
+                httpStatus,
+                status.getCode(),
+                status.getCode(),
+                customMessage
+        );
+
+        if (status.getHttpStatusCode().is5xxServerError()) {
+            log.error(message, e);
+            return;
+        }
+
+        log.warn(message);
     }
 }
