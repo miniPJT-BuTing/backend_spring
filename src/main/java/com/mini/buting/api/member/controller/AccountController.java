@@ -2,6 +2,7 @@ package com.mini.buting.api.member.controller;
 
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.security.principal.AuthUser;
+import com.mini.buting.global.security.util.AuthValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ public class AccountController {
     public BaseResponse<Void> withDraw(
             HttpServletRequest request, HttpServletResponse response,
             @AuthenticationPrincipal AuthUser authUser) {
-        long memberId = authUser.getId();
+        long memberId = AuthValidator.require(authUser).getId();
         // TODO: 필요한 연계 엔티티 초기화
         // TODO: 회원 삭제
         // TODO: 로그아웃 처리
