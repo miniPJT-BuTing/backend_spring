@@ -1,5 +1,7 @@
 package com.mini.buting.api.member.controller;
 
+import com.mini.buting.api.member.dto.MemberProfileResponse;
+import com.mini.buting.api.member.service.MemberService;
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.security.principal.AuthUser;
 import com.mini.buting.global.security.util.AuthValidator;
@@ -8,17 +10,32 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/members/me")
 @Tag(name = "Member - Account", description = "사용자 계정/마이페이지 관련 API")
 public class AccountController {
-    // TODO: 기존 마이페이지 API 이쪽으로 다 옮기기
+
+    private final MemberService memberService;
+
+    @GetMapping()
+    public BaseResponse<MemberProfileResponse> getMyProfile(@AuthenticationPrincipal AuthUser authUser) {
+        long memberId = AuthValidator.require(authUser).getId();
+        log.debug("내 프로필 조회 요청: userId={}", memberId);
+
+        MemberProfileResponse profile = memberService.getMemberProfile(memberId);
+        log.debug("내 프로필 조회 성공: userId={}, nickname={}", memberId, profile.getNickname());
+
+        return BaseResponse.onSuccess(profile);
+    }
 
     @Operation(summary = "회원탈퇴 API", description = "기존 사용자를 비활성화")
     @DeleteMapping()
