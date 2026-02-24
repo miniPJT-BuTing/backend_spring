@@ -7,6 +7,8 @@ import com.mini.buting.api.chat.service.*;
 import com.mini.buting.api.matchRequest.domain.MatchRequest;
 import com.mini.buting.api.matchRequest.repository.MatchRequestRepository;
 import com.mini.buting.global.response.BaseResponse;
+import com.mini.buting.global.security.principal.AuthUser;
+import com.mini.buting.global.security.util.AuthValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -63,7 +66,7 @@ public class ChatController {
             description = """
                 채팅방에 입장하며 채팅방 요약 정보, 공지(있으면), 참여 멤버 목록, 초기 메시지 목록을 조회합니다.
                 
-                - `senderId` 헤더로 요청자를 식별합니다.
+                - JWT 인증 사용자 기준으로 요청자를 식별합니다.
                 - `noticeInfo`는 공지가 없으면 null 입니다.
                 - `messages.messages`는 초기 진입 시 비어 있을 수 있습니다.
                 """
@@ -140,8 +143,9 @@ public class ChatController {
                     in = ParameterIn.HEADER,
                     example = "1"
             )
-            @RequestHeader("senderId") Long senderId
-    ){
+            @AuthenticationPrincipal AuthUser authUser
+            ){
+        long senderId = AuthValidator.require(authUser).getId();
         ChatRoomInfoResponse roomInfo = chatRoomService.enterChatroom(roomId, senderId);
 
         return BaseResponse.onSuccess(roomInfo);
@@ -232,7 +236,7 @@ public class ChatController {
                     in = ParameterIn.HEADER,
                     example = "2"
             )
-            @RequestHeader("senderId") Long senderId,
+            @AuthenticationPrincipal AuthUser authUser,
 
             @Parameter(
                     description = """
@@ -245,7 +249,7 @@ public class ChatController {
             )
             @RequestParam(required = false) Long beforeSeq
     ) {
-        return BaseResponse.onSuccess(chatRoomService.getMessages(roomId, senderId, beforeSeq));
+        return BaseResponse.onSuccess(chatRoomService.getMessages(roomId, AuthValidator.require(authUser).getId(), beforeSeq));
     }
 
     // 채팅방 생성 (테스트용. 실서비스에서는 api 없음)
@@ -256,8 +260,6 @@ public class ChatController {
         chatRoomService.sendWelcomeMessage(room.getRoomId(), room.getLeader().getId());
         return room.getRoomId() + " " + room.getTitle();
     }
-
-
 
     @Operation(
             summary = "채팅방 목록 조회",
@@ -311,17 +313,8 @@ public class ChatController {
             )
     })
     @GetMapping
-    public BaseResponse<List<ChatRoomResponse>> getChatRooms(
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId
-    ) {
-        return BaseResponse.onSuccess(chatRoomListService.getChatRooms(senderId));
+    public BaseResponse<List<ChatRoomResponse>> getChatRooms(@AuthenticationPrincipal AuthUser authUser) {
+        return BaseResponse.onSuccess(chatRoomListService.getChatRooms(AuthValidator.require(authUser).getId()));
     }
 
     @Operation(
@@ -365,14 +358,7 @@ public class ChatController {
             )
             @PathVariable String roomId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId,
+            @AuthenticationPrincipal AuthUser authUser,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
@@ -392,7 +378,7 @@ public class ChatController {
             @RequestBody ChatRoomUpdateRequest chatRoomUpdateRequest
     ) {
         ChatRoomUpdateResponse updateRoom =
-                chatRoomService.updateChatRoomTitle(roomId, senderId, chatRoomUpdateRequest);
+                chatRoomService.updateChatRoomTitle(roomId, AuthValidator.require(authUser).getId(), chatRoomUpdateRequest);
         return BaseResponse.onSuccess(updateRoom);
     }
 
@@ -467,14 +453,7 @@ public class ChatController {
             )
             @PathVariable String roomId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId,
+            @AuthenticationPrincipal AuthUser authUser,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
@@ -495,7 +474,7 @@ public class ChatController {
             )
             @RequestBody NoticeUpsertRequest request
     ) {
-        return BaseResponse.onSuccess(noticeService.upsertNotice(roomId, senderId, request));
+        return BaseResponse.onSuccess(noticeService.upsertNotice(roomId, AuthValidator.require(authUser).getId(), request));
     }
 
     @Operation(
@@ -544,16 +523,9 @@ public class ChatController {
             )
             @PathVariable String roomId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        return BaseResponse.onSuccess(noticeService.getNotice(roomId, senderId));
+        return BaseResponse.onSuccess(noticeService.getNotice(roomId, AuthValidator.require(authUser).getId()));
     }
 
     @Operation(
@@ -594,16 +566,9 @@ public class ChatController {
             )
             @PathVariable String roomId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        noticeService.delete(roomId, senderId);
+        noticeService.delete(roomId, AuthValidator.require(authUser).getId());
         return BaseResponse.onSuccess();
     }
 
@@ -684,14 +649,7 @@ public class ChatController {
             )
             @PathVariable String roomId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "1"
-            )
-            @RequestHeader("senderId") Long senderId,
+            @AuthenticationPrincipal AuthUser authUser,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
@@ -719,7 +677,7 @@ public class ChatController {
             @RequestBody VoteCreateRequest vote
     ) {
         return BaseResponse.onSuccess(
-                voteService.createVote(roomId, senderId, vote)
+                voteService.createVote(roomId, AuthValidator.require(authUser).getId(), vote)
         );
     }
 
@@ -797,16 +755,9 @@ public class ChatController {
             )
             @PathVariable String voteId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        return BaseResponse.onSuccess(voteService.getVoteInfo(roomId, voteId, senderId));
+        return BaseResponse.onSuccess(voteService.getVoteInfo(roomId, voteId, AuthValidator.require(authUser).getId()));
     }
 
 
@@ -886,14 +837,7 @@ public class ChatController {
             )
             @PathVariable String voteId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "2"
-            )
-            @RequestHeader("senderId") Long senderId,
+            @AuthenticationPrincipal AuthUser authUser,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
@@ -913,7 +857,7 @@ public class ChatController {
             @RequestBody VoteBallotCreateRequest vote
     ) {
         return BaseResponse.onSuccess(
-                voteService.vote(roomId, voteId, senderId, vote)
+                voteService.vote(roomId, voteId, AuthValidator.require(authUser).getId(), vote)
         );
     }
 
@@ -961,16 +905,9 @@ public class ChatController {
             )
             @PathVariable String voteId,
 
-            @Parameter(
-                    name = "senderId",
-                    description = "요청자 회원 ID",
-                    required = true,
-                    in = ParameterIn.HEADER,
-                    example = "1"
-            )
-            @RequestHeader("senderId") Long senderId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        voteService.deleteVote(roomId, voteId, senderId);
+        voteService.deleteVote(roomId, voteId, AuthValidator.require(authUser).getId());
         return BaseResponse.onSuccess();
     }
 
