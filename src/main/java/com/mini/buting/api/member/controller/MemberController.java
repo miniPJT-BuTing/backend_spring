@@ -4,12 +4,15 @@ import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
 import com.mini.buting.api.auth.service.SignUpService;
 import com.mini.buting.api.member.domain.PersonalityType;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
+import com.mini.buting.api.member.dto.request.UpdateMyProfileRequest;
 import com.mini.buting.api.member.dto.request.SignUpRequest;
 import com.mini.buting.api.member.service.MemberService;
 import com.mini.buting.api.member.dto.response.PersonalityKeywordResponse;
 import com.mini.buting.global.constant.ErrorMessages;
 import com.mini.buting.global.constant.Patterns;
 import com.mini.buting.global.response.BaseResponse;
+import com.mini.buting.global.security.principal.AuthUser;
+import com.mini.buting.global.security.util.AuthValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -17,6 +20,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,6 +72,18 @@ public class MemberController {
     public BaseResponse<Void> signUp(@Valid @RequestBody SignUpRequest requestDto) {
         signUpService.signUp(requestDto);
         return BaseResponse.onSuccess();
+    }
+
+    @Operation(summary = "내 프로필 수정", description = "로그인한 사용자의 프로필(닉네임/MBTI/성격키워드/자기소개)을 수정합니다.")
+    @PatchMapping("/me")
+    public BaseResponse<MemberProfileResponse> updateMyProfile(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UpdateMyProfileRequest request) {
+        long memberId = AuthValidator.require(authUser).getId();
+        log.debug("내 프로필 수정 요청: memberId={}", memberId);
+
+        MemberProfileResponse response = memberService.updateMyProfile(memberId, request);
+        return BaseResponse.onSuccess(response);
     }
 
     /**

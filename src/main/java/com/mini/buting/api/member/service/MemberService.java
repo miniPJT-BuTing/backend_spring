@@ -3,6 +3,7 @@ package com.mini.buting.api.member.service;
 import com.mini.buting.api.auth.dto.response.MemberAvailabilityResponse;
 import com.mini.buting.api.member.domain.Member;
 import com.mini.buting.api.member.dto.MemberProfileResponse;
+import com.mini.buting.api.member.dto.request.UpdateMyProfileRequest;
 import com.mini.buting.api.member.repository.MemberRepository;
 import com.mini.buting.api.member.repository.MemberSocialRepository;
 import com.mini.buting.api.university.util.UniversityEmailParser;
@@ -102,5 +103,52 @@ public class MemberService {
         }
 
         return responses;
+    }
+
+    /**
+     * 내 프로필 수정
+     * - nickname, mbti, personalityTypes, bio 중 전달된 필드만 부분 수정
+     */
+    @Transactional
+    public MemberProfileResponse updateMyProfile(Long memberId, UpdateMyProfileRequest request) {
+        log.debug("내 프로필 수정 요청: memberId={}", memberId);
+
+        Member member = memberRepository.findByIdWithDetails(memberId)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        if (member.getIsDeleted()) {
+            throw new BaseException(BaseResponseStatus.MEMBER_DELETED_USER);
+        }
+
+        boolean hasAny = request.nickname() != null
+                || request.mbti() != null
+                || request.personalityTypes() != null
+                || request.bio() != null;
+
+        if (!hasAny) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+
+        if (request.nickname() != null) {
+            String nickname = request.nickname().trim();
+            if (memberRepository.existsByNicknameAndIsDeletedFalseAndIdNot(nickname, memberId)) {
+                throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+            }
+            member.updateNickname(nickname);
+        }
+
+        if (request.mbti() != null) {
+            member.updateMbti(request.mbti());
+        }
+
+        if (request.personalityTypes() != null) {
+            member.setPersonalities(request.personalityTypes());
+        }
+
+        if (request.bio() != null) {
+            member.updateBio(request.bio().trim());
+        }
+
+        return MemberProfileResponse.from(member);
     }
 }
