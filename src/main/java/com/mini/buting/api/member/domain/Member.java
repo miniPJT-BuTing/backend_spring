@@ -208,6 +208,21 @@ public class Member extends BaseTimeEntity {
     }
 
     // --- 성격 및 MBTI 관련 ---
+    public void updateNickname(String nickname) {
+        if (!StringUtils.hasText(nickname)) {
+            throw new BaseException(BaseResponseStatus.INVALID_REQUEST);
+        }
+        this.nickname = nickname.trim();
+    }
+
+    public void updateBio(String bio) {
+        if (!StringUtils.hasText(bio)) {
+            this.bio = null;
+            return;
+        }
+        this.bio = bio.trim();
+    }
+
     public void updateMbti(MbtiType newMbti) {
         if (newMbti == null) {
             throw new BaseException(BaseResponseStatus.MBTI_REQUIRED);
@@ -225,7 +240,8 @@ public class Member extends BaseTimeEntity {
 
     /**
      * <h3>사용자 성격 키워드 일괄 설정</h3>
-     * <p>기존 키워드를 모두 제거하고 새로운 키워드 세트로 교체</p>
+     * <p>기존 키워드 컬렉션과 diff를 계산해 삭제/추가만 수행</p>
+     * <p>clear 후 동일 PK 재삽입 시 발생할 수 있는 영속성 컨텍스트 충돌을 방지</p>
      *
      * @param personalityTypes 설정할 키워드 목록 (최대 {@link MemberConstants.Personality#MAX_COUNT}개)
      * @throws BaseException 개수 초과, 중복 타입, 혹은 필수값 누락 시 관련 에러 발생
@@ -244,9 +260,17 @@ public class Member extends BaseTimeEntity {
             throw new BaseException(BaseResponseStatus.DUPLICATE_PERSONALITY_TYPES);
         }
 
-        // 기존 성격 키워드 삭제 후 새로 추가
-        this.personalities.clear();
-        personalityTypes.forEach(type -> this.personalities.add(MemberPersonality.of(this, type)));
+        // 1) 요청 목록에 없는 기존 항목 제거
+        this.personalities.removeIf(mp -> !uniqueTypes.contains(mp.getPersonalityType()));
+
+        // 2) 이미 존재하는 항목은 유지하고, 누락된 항목만 추가
+        Set<PersonalityType> existingTypes = this.personalities.stream()
+                .map(MemberPersonality::getPersonalityType)
+                .collect(java.util.stream.Collectors.toSet());
+
+        uniqueTypes.stream()
+                .filter(type -> !existingTypes.contains(type))
+                .forEach(type -> this.personalities.add(MemberPersonality.of(this, type)));
     }
 
     public List<PersonalityType> getPersonalityTypes() {

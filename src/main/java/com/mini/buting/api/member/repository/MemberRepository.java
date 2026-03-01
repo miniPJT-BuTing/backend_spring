@@ -87,6 +87,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     boolean existsByNicknameAndIsDeletedFalse(String nickname);
 
+    boolean existsByNicknameAndIsDeletedFalseAndIdNot(String nickname, Long id);
+
     /**
      * 대학 이메일(local-part + domain) 기준 활성 회원 존재 여부 확인
      *
