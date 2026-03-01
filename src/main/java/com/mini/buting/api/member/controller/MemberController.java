@@ -74,18 +74,6 @@ public class MemberController {
         return BaseResponse.onSuccess();
     }
 
-    @Operation(summary = "내 프로필 수정", description = "로그인한 사용자의 프로필(닉네임/MBTI/성격키워드/자기소개)을 수정합니다.")
-    @PatchMapping("/me")
-    public BaseResponse<MemberProfileResponse> updateMyProfile(
-            @AuthenticationPrincipal AuthUser authUser,
-            @Valid @RequestBody UpdateMyProfileRequest request) {
-        long memberId = AuthValidator.require(authUser).getId();
-        log.debug("내 프로필 수정 요청: memberId={}", memberId);
-
-        MemberProfileResponse response = memberService.updateMyProfile(memberId, request);
-        return BaseResponse.onSuccess(response);
-    }
-
     /**
      * 멤버 정보 중복 체크
      * <p>닉네임 또는 이메일의 사용 가능 여부를 확인.

@@ -1,6 +1,7 @@
 package com.mini.buting.api.member.controller;
 
 import com.mini.buting.api.member.dto.MemberProfileResponse;
+import com.mini.buting.api.member.dto.request.UpdateMyProfileRequest;
 import com.mini.buting.api.member.service.MemberService;
 import com.mini.buting.global.response.BaseResponse;
 import com.mini.buting.global.security.principal.AuthUser;
@@ -9,13 +10,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -47,5 +46,16 @@ public class AccountController {
         // TODO: 회원 삭제
         // TODO: 로그아웃 처리
         return BaseResponse.onSuccess();
+    }
+    @Operation(summary = "내 프로필 수정", description = "로그인한 사용자의 프로필(닉네임/MBTI/성격키워드/자기소개)을 수정합니다.")
+    @PatchMapping()
+    public BaseResponse<MemberProfileResponse> updateMyProfile(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UpdateMyProfileRequest request) {
+        long memberId = AuthValidator.require(authUser).getId();
+        log.debug("내 프로필 수정 요청: memberId={}", memberId);
+
+        MemberProfileResponse response = memberService.updateMyProfile(memberId, request);
+        return BaseResponse.onSuccess(response);
     }
 }
