@@ -95,4 +95,21 @@ public class TeamResponseDto {
                                       @JsonFormat(shape = JsonFormat.Shape.STRING,
                                                       pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime updatedAt) {
     }
+
+    /**
+     * 내가 속한 팀(팀장/팀원) 요약
+     */
+    @Builder
+    public record MyTeamSummary(Long teamId,
+                                String role, // LEADER | MEMBER
+                                String title,
+                                TeamSize teamSize,
+                                String preferredMood,
+                                Integer preferredAgeMin, Integer preferredAgeMax,
+                                Integer preferredEntryYearMin, Integer preferredEntryYearMax,
+                                Integer currentMemberCount, Integer targetMemberCount,
+                                Boolean isOpen,
+                                @JsonFormat(shape = JsonFormat.Shape.STRING,
+                                                pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime createdAt) {
+    }
 }

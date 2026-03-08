@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -256,6 +257,62 @@ public class TeamService {
                             .targetMemberCount(team.getTeamSize().getSize())
                             .createdAt(team.getCreatedAt()).build();
         });
+    }
+
+    /**
+     * 내가 속한 팀 목록 조회 (팀장 우선)
+     */
+    public List<TeamResponseDto.MyTeamSummary> getMyTeams(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        List<TeamMember> memberships = teamMemberRepository.findActiveByMemberWithTeamAndLeader(member);
+        if (memberships.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Team> uniqueTeams = new HashMap<>();
+        for (TeamMember membership : memberships) {
+            Team team = membership.getTeam();
+            if (team == null || Boolean.TRUE.equals(team.getIsDeleted())) continue;
+            uniqueTeams.putIfAbsent(team.getId(), team);
+        }
+
+        List<Team> sortedTeams = uniqueTeams.values().stream()
+                .sorted(Comparator
+                        .comparing((Team team) -> !team.getLeader().getId().equals(memberId))
+                        .thenComparing(Team::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        List<Long> teamIds = sortedTeams.stream().map(Team::getId).toList();
+        Map<Long, Long> memberCountMap = new HashMap<>();
+        if (!teamIds.isEmpty()) {
+            teamMemberRepository.countMembersByTeamIds(teamIds)
+                    .forEach(row -> memberCountMap.put(row.getTeamId(), row.getMemberCount()));
+        }
+
+        return sortedTeams.stream()
+                .map(team -> {
+                    long currentMemberCount = memberCountMap.getOrDefault(team.getId(), 0L);
+                    String role = team.getLeader().getId().equals(memberId) ? "LEADER" : "MEMBER";
+
+                    return TeamResponseDto.MyTeamSummary.builder()
+                            .teamId(team.getId())
+                            .role(role)
+                            .title(team.getTitle())
+                            .teamSize(team.getTeamSize())
+                            .preferredMood(team.getPreferredMood().getDisplayName())
+                            .preferredAgeMin(team.getPreferredAgeMin().intValue())
+                            .preferredAgeMax(team.getPreferredAgeMax().intValue())
+                            .preferredEntryYearMin(team.getPreferredEntryYearMin().intValue())
+                            .preferredEntryYearMax(team.getPreferredEntryYearMax().intValue())
+                            .currentMemberCount((int) currentMemberCount)
+                            .targetMemberCount(team.getTeamSize().getSize())
+                            .isOpen(team.getIsOpen())
+                            .createdAt(team.getCreatedAt())
+                            .build();
+                })
+                .toList();
     }
 
     /**
