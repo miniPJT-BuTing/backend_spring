@@ -79,7 +79,7 @@ public class TeamController {
     public ResponseEntity<BaseResponse<List<TeamResponseDto.MyTeamSummary>>> getMyTeams(
             @AuthenticationPrincipal AuthUser authUser) {
         long memberId = AuthValidator.require(authUser).getId();
-        log.info("내 팀 목록 조회 API 호출 - memberId: {}", memberId);
+        log.debug("내 팀 목록 조회 API 호출 - memberId: {}", memberId);
         return ResponseEntity.ok(BaseResponse.onSuccess(teamService.getMyTeams(memberId)));
     }
 

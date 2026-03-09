@@ -30,13 +30,13 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, TeamMemb
     List<TeamMember> findByMember(Member member);
 
     /**
-     * 멤버의 모든 팀 조회 (팀/팀장 fetch)
+     * 멤버가 속한 삭제되지 않은 팀 조회 (팀/팀장 fetch)
      */
     @Query("SELECT tm FROM TeamMember tm " +
             "JOIN FETCH tm.team t " +
             "JOIN FETCH t.leader " +
             "WHERE tm.member = :member AND t.isDeleted = false")
-    List<TeamMember> findActiveByMemberWithTeamAndLeader(@Param("member") Member member);
+    List<TeamMember> findByMemberWithNonDeletedTeamAndLeader(@Param("member") Member member);
 
     /**
      * 팀과 멤버로 팀멤버 삭제
@@ -51,7 +51,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, TeamMemb
      */
     @Query("SELECT tm.team.id AS teamId, COUNT(tm) AS memberCount " +
                     "FROM TeamMember tm " +
-                    "WHERE tm.team.id IN :teamIds " +
+                    "WHERE tm.team.id IN :teamIds AND tm.team.isDeleted = false " +
                     "GROUP BY tm.team.id")
     List<TeamMemberCount> countMembersByTeamIds(@Param("teamIds") List<Long> teamIds);
 

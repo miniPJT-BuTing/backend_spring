@@ -266,7 +266,8 @@ public class TeamService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
 
-        List<TeamMember> memberships = teamMemberRepository.findActiveByMemberWithTeamAndLeader(member);
+        List<TeamMember> memberships =
+                teamMemberRepository.findByMemberWithNonDeletedTeamAndLeader(member);
         if (memberships.isEmpty()) {
             return List.of();
         }
@@ -274,14 +275,17 @@ public class TeamService {
         Map<Long, Team> uniqueTeams = new HashMap<>();
         for (TeamMember membership : memberships) {
             Team team = membership.getTeam();
-            if (team == null || Boolean.TRUE.equals(team.getIsDeleted())) continue;
+            if (team == null || team.getId() == null || Boolean.TRUE.equals(team.getIsDeleted())) {
+                continue;
+            }
             uniqueTeams.putIfAbsent(team.getId(), team);
         }
 
         List<Team> sortedTeams = uniqueTeams.values().stream()
                 .sorted(Comparator
-                        .comparing((Team team) -> !team.getLeader().getId().equals(memberId))
-                        .thenComparing(Team::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                        .comparing((Team team) -> !isLeaderTeam(team, memberId))
+                        .thenComparing(Team::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(Team::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
 
         List<Long> teamIds = sortedTeams.stream().map(Team::getId).toList();
@@ -293,26 +297,18 @@ public class TeamService {
 
         return sortedTeams.stream()
                 .map(team -> {
-                    long currentMemberCount = memberCountMap.getOrDefault(team.getId(), 0L);
-                    String role = team.getLeader().getId().equals(memberId) ? "LEADER" : "MEMBER";
-
-                    return TeamResponseDto.MyTeamSummary.builder()
-                            .teamId(team.getId())
-                            .role(role)
-                            .title(team.getTitle())
-                            .teamSize(team.getTeamSize())
-                            .preferredMood(team.getPreferredMood().getDisplayName())
-                            .preferredAgeMin(team.getPreferredAgeMin().intValue())
-                            .preferredAgeMax(team.getPreferredAgeMax().intValue())
-                            .preferredEntryYearMin(team.getPreferredEntryYearMin().intValue())
-                            .preferredEntryYearMax(team.getPreferredEntryYearMax().intValue())
-                            .currentMemberCount((int) currentMemberCount)
-                            .targetMemberCount(team.getTeamSize().getSize())
-                            .isOpen(team.getIsOpen())
-                            .createdAt(team.getCreatedAt())
-                            .build();
+                    int currentMemberCount = memberCountMap.getOrDefault(team.getId(), 0L).intValue();
+                    return TeamResponseDto.MyTeamSummary.of(team, memberId, currentMemberCount);
                 })
                 .toList();
+    }
+
+    private boolean isLeaderTeam(Team team, Long memberId) {
+        if (team == null || team.getLeader() == null || team.getLeader().getId() == null
+                || memberId == null) {
+            return false;
+        }
+        return team.getLeader().getId().equals(memberId);
     }
 
     /**
