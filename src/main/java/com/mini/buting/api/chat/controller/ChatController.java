@@ -19,12 +19,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @Slf4j
@@ -44,8 +44,9 @@ public class ChatController {
     @MessageMapping("chat.message.{roomId}")
     public void sendMessage(
             @Payload ChatMessageRequest message,
-            @Header("senderId") Long senderId
+            Principal principal
     ) {
+        Long senderId = Long.parseLong(principal.getName());
         chatService.sendMessage(message, senderId);
     }
 
@@ -53,8 +54,9 @@ public class ChatController {
     public void markRead(
             @DestinationVariable String roomId,
             ChatReadRequest req,
-            @Header("senderId") Long senderId
+            Principal principal
     ){
+        Long senderId = Long.parseLong(principal.getName());
         chatRoomService.markAsRead(Long.parseLong(roomId), senderId, req.lastReadSeq());
         chatReadNotifier.broadcastRead(Long.parseLong(roomId), senderId, req.lastReadSeq());
     }
