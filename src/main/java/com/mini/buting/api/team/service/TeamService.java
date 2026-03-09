@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -256,6 +257,58 @@ public class TeamService {
                             .targetMemberCount(team.getTeamSize().getSize())
                             .createdAt(team.getCreatedAt()).build();
         });
+    }
+
+    /**
+     * 내가 속한 팀 목록 조회 (팀장 우선)
+     */
+    public List<TeamResponseDto.MyTeamSummary> getMyTeams(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(BaseResponseStatus.MEMBER_NOT_FOUND));
+
+        List<TeamMember> memberships =
+                teamMemberRepository.findByMemberWithNonDeletedTeamAndLeader(member);
+        if (memberships.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Team> uniqueTeams = new HashMap<>();
+        for (TeamMember membership : memberships) {
+            Team team = membership.getTeam();
+            if (team == null || team.getId() == null || Boolean.TRUE.equals(team.getIsDeleted())) {
+                continue;
+            }
+            uniqueTeams.putIfAbsent(team.getId(), team);
+        }
+
+        List<Team> sortedTeams = uniqueTeams.values().stream()
+                .sorted(Comparator
+                        .comparing((Team team) -> !isLeaderTeam(team, memberId))
+                        .thenComparing(Team::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(Team::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+
+        List<Long> teamIds = sortedTeams.stream().map(Team::getId).toList();
+        Map<Long, Long> memberCountMap = new HashMap<>();
+        if (!teamIds.isEmpty()) {
+            teamMemberRepository.countMembersByTeamIds(teamIds)
+                    .forEach(row -> memberCountMap.put(row.getTeamId(), row.getMemberCount()));
+        }
+
+        return sortedTeams.stream()
+                .map(team -> {
+                    int currentMemberCount = memberCountMap.getOrDefault(team.getId(), 0L).intValue();
+                    return TeamResponseDto.MyTeamSummary.of(team, memberId, currentMemberCount);
+                })
+                .toList();
+    }
+
+    private boolean isLeaderTeam(Team team, Long memberId) {
+        if (team == null || team.getLeader() == null || team.getLeader().getId() == null
+                || memberId == null) {
+            return false;
+        }
+        return team.getLeader().getId().equals(memberId);
     }
 
     /**

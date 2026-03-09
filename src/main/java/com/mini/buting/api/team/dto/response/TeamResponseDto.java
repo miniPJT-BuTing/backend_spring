@@ -95,4 +95,49 @@ public class TeamResponseDto {
                                       @JsonFormat(shape = JsonFormat.Shape.STRING,
                                                       pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime updatedAt) {
     }
+
+    /**
+     * 내가 속한 팀(팀장/팀원) 요약
+     */
+    @Builder
+    public record MyTeamSummary(Long teamId,
+                                MyTeamRole role,
+                                String title,
+                                TeamSize teamSize,
+                                String preferredMood,
+                                Integer preferredAgeMin, Integer preferredAgeMax,
+                                Integer preferredEntryYearMin, Integer preferredEntryYearMax,
+                                Integer currentMemberCount, Integer targetMemberCount,
+                                Boolean isOpen,
+                                @JsonFormat(shape = JsonFormat.Shape.STRING,
+                                                pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime createdAt) {
+        public static MyTeamSummary of(Team team, Long memberId, int currentMemberCount) {
+            return MyTeamSummary.builder()
+                    .teamId(team.getId())
+                    .role(isLeader(team, memberId) ? MyTeamRole.LEADER : MyTeamRole.MEMBER)
+                    .title(team.getTitle())
+                    .teamSize(team.getTeamSize())
+                    .preferredMood(team.getPreferredMood() != null ? team.getPreferredMood().getDisplayName() : null)
+                    .preferredAgeMin(toInteger(team.getPreferredAgeMin()))
+                    .preferredAgeMax(toInteger(team.getPreferredAgeMax()))
+                    .preferredEntryYearMin(toInteger(team.getPreferredEntryYearMin()))
+                    .preferredEntryYearMax(toInteger(team.getPreferredEntryYearMax()))
+                    .currentMemberCount(currentMemberCount)
+                    .targetMemberCount(team.getTeamSize() != null ? team.getTeamSize().getSize() : null)
+                    .isOpen(team.getIsOpen())
+                    .createdAt(team.getCreatedAt())
+                    .build();
+        }
+
+        private static boolean isLeader(Team team, Long memberId) {
+            if (team.getLeader() == null || team.getLeader().getId() == null || memberId == null) {
+                return false;
+            }
+            return team.getLeader().getId().equals(memberId);
+        }
+
+        private static Integer toInteger(Number value) {
+            return value == null ? null : value.intValue();
+        }
+    }
 }

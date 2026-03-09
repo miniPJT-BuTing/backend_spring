@@ -74,6 +74,15 @@ public class TeamController {
         return ResponseEntity.ok(BaseResponse.onSuccess(teamInvitationService.getReceivedInvitations(memberId)));
     }
 
+    @Operation(summary = "내 팀 목록 조회", description = "내가 속한 팀 목록을 조회합니다. (팀장 역할 우선)")
+    @GetMapping("/me")
+    public ResponseEntity<BaseResponse<List<TeamResponseDto.MyTeamSummary>>> getMyTeams(
+            @AuthenticationPrincipal AuthUser authUser) {
+        long memberId = AuthValidator.require(authUser).getId();
+        log.debug("내 팀 목록 조회 API 호출 - memberId: {}", memberId);
+        return ResponseEntity.ok(BaseResponse.onSuccess(teamService.getMyTeams(memberId)));
+    }
+
     @Operation(summary = "초대 응답", description = "팀 초대를 수락하거나 거절합니다.")
     @PatchMapping("/invitations/{invitationId}/respond")
     public ResponseEntity<BaseResponse<TeamResponseDto.RespondToInvitationResponse>> respondToInvitation(
